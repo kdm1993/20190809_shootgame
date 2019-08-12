@@ -26,7 +26,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image bullet = tk.getImage("D://images//bullet.png");
 	Image kill = tk.getImage("D://images//kill.png");
 	Image map = tk.getImage("D://images//map.jpg");
-	Image map2 = tk.getImage("D://images//map2.jpg");
+	Image map2 = tk.getImage("D://images//map.jpg");
 	Image buffImage = null;
 	Graphics buffg = null;
 	Thread th;
@@ -39,7 +39,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Explosion e;
 	int bullet_count = 0, kill_count = 0;
 	boolean left, right, up, down, left_button, left_button_count;
-	boolean bullet_check_x, bullet_check_y;
+	boolean bullet_check;
 	
 	public test02() {
 		for(int i=0; i<20; i++) {
@@ -62,15 +62,16 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	public void paint(Graphics g) {
 		buffImage = createImage(f_width, f_height+15);
 		buffg = buffImage.getGraphics();
-		
 		update(g);
 	}
 	public void update(Graphics g) {
 		Draw();
 		Draw_Bullet();
 		Draw_Kill();
-		Bullet_Check();
 		Draw_Explosion();
+		if(bullet_list.size() != 0) {
+			Bullet_Check();
+		}
 		g.drawImage(buffImage, 0, 0, this);
 	}
 	@Override
@@ -90,7 +91,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		}
 	}
 	public void Draw() {
-		buffg.clearRect(0, 0, f_width, f_height);
+		buffg.clearRect(0, 15, f_width, f_height);
 		buffg.drawImage(map, map_x_1, 0, this);
 		buffg.drawImage(map2, map_x_2, 0, this);
 		buffg.drawImage(ironman, x, y, this);
@@ -126,34 +127,32 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		}
 	}
 	public void Bullet_Check() { //미사일과 적 이미지 충돌체크 메소드
-		for(int i=0; i<bullet_list.size(); i++) {
-			for(int v=0; v<kill_list.size(); v++) {
-				b = (Bullet) bullet_list.get(i);
-				k = (Kill) kill_list.get(v);
-				for(int o=k.kill_pos.x; o<k.kill_pos.x+kill.getWidth(this); o++) {
-					for(int p=b.pos.x; p<b.pos.x+bullet.getWidth(this); p++) {
-						if(o == p) {
-							bullet_check_x = true;
-						}
+		try {
+			for(int i=0; i<bullet_list.size(); i++) {
+				for(int v=0; v<kill_list.size(); v++) {
+					if(bullet_list.size() != 0) {
+						b = (Bullet) bullet_list.get(i);
 					}
-				}
-				for(int o=k.kill_pos.y; o<k.kill_pos.y+kill.getHeight(this); o++) {
-					for(int p=b.pos.y; p<b.pos.y+bullet.getHeight(this); p++) {
-						if(o == p) {
-							bullet_check_y = true;
-						}
+					if(kill_list.size() != 0) {
+						k = (Kill) kill_list.get(v);
 					}
+					if((b.pos.x >= k.kill_pos.x && b.pos.x <= k.kill_pos.x+kill.getWidth(this))
+						&& (b.pos.y >= k.kill_pos.y && b.pos.y <= k.kill_pos.y+kill.getHeight(this))) {
+						bullet_check = true;
+					}
+					if(bullet_check == true) {
+						//e = new Explosion(k.kill_pos.x, k.kill_pos.y);
+						//explo_list.add(e);
+						bullet_list.remove(i);
+						kill_list.remove(v);
+					}
+					bullet_check = false;
 				}
-				if(bullet_check_x == true && bullet_check_y == true) {
-					e = new Explosion(k.kill_pos.x, k.kill_pos.y);
-					explo_list.add(e);
-					bullet_list.remove(i);
-					kill_list.remove(v);
-				}
-				bullet_check_x = false;
-				bullet_check_y = false;
 			}
+		} catch(Exception e) {
+			
 		}
+		
 	}
 	public void Map_Move() { // 맵 이동 메소드
 		map_x_1-=2;
