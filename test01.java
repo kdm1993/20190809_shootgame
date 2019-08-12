@@ -1,3 +1,5 @@
+package shootgame;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -16,26 +18,40 @@ public class test01 {
 }
 class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	
-	int x = 60 , y = 100;
+	int x = 100 , y = 300;
+	int map_x_1 = 0, map_x_2 = 1280;
 	int f_width = 1280, f_height=720;
 	Toolkit tk = Toolkit.getDefaultToolkit();
-	Image ironman = tk.getImage("D://images//ironman.png");
-	Image bullet = tk.getImage("D://images//bullet.gif");
+	Image ironman = tk.getImage("D://images//ironman_up.png");
+	Image bullet = tk.getImage("D://images//bullet.png");
+	Image kill = tk.getImage("D://images//kill.png");
+	Image map = tk.getImage("D://images//map.jpg");
+	Image map2 = tk.getImage("D://images//map2.jpg");
 	Image buffImage = null;
 	Graphics buffg = null;
 	Thread th;
 	ArrayList bullet_list = new ArrayList();
+	ArrayList kill_list = new ArrayList();
+	ArrayList explo_list = new ArrayList();
+	ArrayList explo_img = new ArrayList();
 	Bullet b;
-	int bullet_count = 0;
+	Kill k;
+	Explosion e;
+	int bullet_count = 0, kill_count = 0;
 	boolean left, right, up, down, left_button, left_button_count;
+	boolean bullet_check_x, bullet_check_y;
 	
 	public test02() {
+		for(int i=0; i<20; i++) {
+			explo_img.add(tk.getImage("D://images//.jpg"));
+		}
 		Dimension dim = new Dimension(f_width, f_height);
 		setPreferredSize(dim);
 		pack();
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		addKeyListener(this);
 		addMouseListener(this);
+		setBackground(Color.white);
 		setTitle("슈팅게임");
 		setFocusable(true);
 		setVisible(true);
@@ -44,7 +60,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	}
 	
 	public void paint(Graphics g) {
-		buffImage = createImage(f_width, f_height);
+		buffImage = createImage(f_width, f_height+15);
 		buffg = buffImage.getGraphics();
 		
 		update(g);
@@ -52,7 +68,10 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	public void update(Graphics g) {
 		Draw();
 		Draw_Bullet();
-		g.drawImage(buffImage, x, y, this);
+		Draw_Kill();
+		Bullet_Check();
+		Draw_Explosion();
+		g.drawImage(buffImage, 0, 0, this);
 	}
 	@Override
 	public void run() {
@@ -61,6 +80,8 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			while(true) {
 				KeyProcess();
 				BulletProcess();
+				KillProcess();
+				Map_Move();
 				repaint();
 				Thread.sleep(20);
 			}
@@ -69,36 +90,109 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		}
 	}
 	public void Draw() {
-		buffg.clearRect(0, 0, 1280, 720);
+		buffg.clearRect(0, 0, f_width, f_height);
+		buffg.drawImage(map, map_x_1, 0, this);
+		buffg.drawImage(map2, map_x_2, 0, this);
 		buffg.drawImage(ironman, x, y, this);
 	}
 	public void KeyProcess() {
 		if(up == true && y>15) {
-			y-=5;
+			y-=10;
 		}
-		if(down == true && y<300) {
-			y+=5;
+		if(down == true && y<600) {
+			y+=10;
 		}
-		if(left == true && x>59) {
-			x-=5;
+		if(left == true && x>200) {
+			x-=10;
 		}
-		if(right == true && x<500){
-			x+=5;
+		if(right == true && x<1000){
+			x+=10;
 		}
 	}
 	public void BulletProcess() {
-		if(left_button == true) {
-			b = new Bullet(x, y);
+		bullet_count++;
+		if(left_button == true && bullet_count>=7) {
+			b = new Bullet(x+ironman.getWidth(this), y);
 			bullet_list.add(b);
+			bullet_count = 0;
 		}
 	}
-	public void Draw_Bullet() {
+	public void KillProcess() {
+		kill_count++;
+		if(kill_count>=20) {
+			k = new Kill(f_width, (int)(Math.random()*(f_height-kill.getHeight(this)+16)));
+			kill_list.add(k);
+			kill_count = 0;
+		}
+	}
+	public void Bullet_Check() { //미사일과 적 이미지 충돌체크 메소드
+		for(int i=0; i<bullet_list.size(); i++) {
+			for(int v=0; v<kill_list.size(); v++) {
+				b = (Bullet) bullet_list.get(i);
+				k = (Kill) kill_list.get(v);
+				for(int o=k.kill_pos.x; o<k.kill_pos.x+kill.getWidth(this); o++) {
+					for(int p=b.pos.x; p<b.pos.x+bullet.getWidth(this); p++) {
+						if(o == p) {
+							bullet_check_x = true;
+						}
+					}
+				}
+				for(int o=k.kill_pos.y; o<k.kill_pos.y+kill.getHeight(this); o++) {
+					for(int p=b.pos.y; p<b.pos.y+bullet.getHeight(this); p++) {
+						if(o == p) {
+							bullet_check_y = true;
+						}
+					}
+				}
+				if(bullet_check_x == true && bullet_check_y == true) {
+					e = new Explosion(k.kill_pos.x, k.kill_pos.y);
+					explo_list.add(e);
+					bullet_list.remove(i);
+					kill_list.remove(v);
+				}
+				bullet_check_x = false;
+				bullet_check_y = false;
+			}
+		}
+	}
+	public void Map_Move() { // 맵 이동 메소드
+		map_x_1-=2;
+		map_x_2-=2;
+		if(map_x_1 == (f_width*-1)) {
+			map_x_1 = f_width;
+		}
+		if(map_x_2 == (f_width*-1)) {
+			map_x_2 = f_width;
+		}
+	}
+	public void Draw_Bullet() { //미사일 그리는 메소드
 		for(int i=0; i<bullet_list.size(); i++) {
 			b = (Bullet) bullet_list.get(i);
-			buffg.drawImage(bullet, b.pos.x+100, b.pos.y+40, this);
+			buffg.drawImage(bullet, b.pos.x, b.pos.y+20, this);
 			b.move();
 			if(b.pos.x > f_width) {
 				bullet_list.remove(i);
+			}
+		}
+	}
+	public void Draw_Kill() { // 적 이미지 그리는 메소드 
+		for(int i=0; i<kill_list.size(); i++) {
+			k = (Kill) kill_list.get(i);
+			buffg.drawImage(kill, k.kill_pos.x, k.kill_pos.y, this);
+			k.move();
+			if(k.kill_pos.x <= 0-kill.getWidth(this)) {
+				kill_list.remove(i);
+			}
+		}
+	}
+	public void Draw_Explosion()  { //폭발이펙트 출력메소드
+		for(int i=0; i<explo_list.size(); i++) {
+			e = (Explosion) explo_list.get(i);
+			Image explosion = tk.getImage("D://images//explosion.gif");
+			buffg.drawImage(explosion, e.explo_pos.x, e.explo_pos.y, this);
+			e.move();
+			if(e.explo_pos.x <= 0-explosion.getWidth(this)) {
+				explo_list.remove(i);
 			}
 		}
 	}
@@ -107,15 +201,19 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		switch(e.getKeyCode()) {
 		case KeyEvent.VK_W:
 			up = true;
+			ironman = tk.getImage("D://images//ironman_up.png");
 			break;
 		case KeyEvent.VK_A:
 			left = true;
+			ironman = tk.getImage("D://images//ironman_left.png");
 			break;
 		case KeyEvent.VK_S:
 			down = true;
+			ironman = tk.getImage("D://images//ironman_down.png");
 			break;
 		case KeyEvent.VK_D:
 			right = true;
+			ironman = tk.getImage("D://images//ironman_right.png");
 			break;
 		}
 	}
@@ -181,5 +279,33 @@ class Bullet {
 	}
 	public void move() {
 		pos.x += 10;
+	}
+}
+class Kill {
+	Point kill_pos;
+	
+	Kill(int x, int y) {
+		kill_pos = new Point(x, y);
+	}
+	public void move() {
+		kill_pos.x -= 5;
+	}
+}
+class Explosion {
+	Point explo_pos;
+	
+	Explosion(int x, int y) {
+		explo_pos = new Point(x, y);
+	}
+	public void move() {
+		explo_pos.x -= 5;
+	}
+}
+class Explosion_Img {
+	
+	
+	
+	Explosion_Img() {
+		
 	}
 }
