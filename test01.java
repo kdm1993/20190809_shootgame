@@ -27,6 +27,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image kill = tk.getImage("D://images//kill.png");
 	Image map = tk.getImage("D://images//map.jpg");
 	Image map2 = tk.getImage("D://images//map2.png");
+	Image beam;
 	Image buffImage = null;
 	Graphics buffg = null;
 	Thread th;
@@ -37,9 +38,10 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Bullet b;
 	Kill k;
 	Explosion e;
-	int bullet_count = 0, kill_count = 0;
-	boolean left, right, up, down, left_button, left_button_count;
-	boolean bullet_check_x, bullet_check_y;
+	int bullet_count = 0, kill_count = 0, right_button_count = 0, beam_count = 0, beam_img=0;
+	boolean left, right, up, down, left_button, left_button_count, right_button;
+	boolean bullet_check_x, bullet_check_y, beam_check;
+	boolean right_beam, char_check_x, char_check_y;
 	
 	public test02() {
 		Dimension dim = new Dimension(1280, 720);
@@ -65,6 +67,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		Draw_Bullet();
 		Draw_Kill();
 		Draw_Explosion();
+		Draw_Beam();
 		g.drawImage(buffImage, 0, 0, this);
 	}
 	@Override
@@ -75,7 +78,10 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				KeyProcess();
 				BulletProcess();
 				KillProcess();
+				LaserProcess();
 				Bullet_Check();
+				Beam_Check();
+				Char_Check();
 				Map_Move();
 				repaint();
 				Thread.sleep(20);
@@ -100,7 +106,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		if(down == true && y<580) {
 			y+=10;
 		}
-		if(left == true && x>200) {
+		if(left == true && x>0) {
 			x-=10;
 		}
 		if(right == true && x<1000){
@@ -121,6 +127,16 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			k = new Kill(f_width, (int)(Math.random()*((f_height-kill.getHeight(null)-100)))+30);
 			kill_list.add(k);
 			kill_count = 0;
+		}
+	}
+	public void LaserProcess() {
+		if(right_button == true && right_beam==false) {
+			right_button_count++;
+			if(right_button_count >= 50) {
+				ironman = tk.getImage("D://images//laser1.gif");
+			}
+		} else {
+			right_button_count = 0;
 		}
 	}
 	public void Bullet_Check() { //미사일과 적 이미지 충돌체크 메소드
@@ -162,6 +178,69 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			e.printStackTrace();
 		}
 		
+	}
+	public void Beam_Check() {
+		if(right_beam == true) {
+			try {
+				for(int v=0; v<kill_list.size(); v++) {
+					if(v!=kill_list.size()) {
+						k = (Kill) kill_list.get(v);
+					}
+					for(int y1=(this.y-5+17); y1<(this.y-5+28); y1++) {
+						for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
+							if(y1 == y2) {
+								beam_check = true;
+								break;
+							}
+						}
+					}
+					if(beam_check == true) {
+						e = new Explosion(k.kill_pos.x, k.kill_pos.y);
+						new Score().score_plus(10);
+						explo_list.add(e);
+						kill_list.remove(v);
+					}
+					beam_check = false;
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	public void Char_Check() { //캐릭터와 적 충돌체크
+		try {
+			for(int v=0; v<kill_list.size(); v++) {
+				if(v!=kill_list.size()) {
+					k = (Kill) kill_list.get(v);
+				}
+				for(int x1=x; x1<x+ironman.getWidth(null); x1++) {
+					for(int x2=k.kill_pos.x; x2<k.kill_pos.x+kill.getWidth(null); x2++) {
+						if(x1 == x2) {
+							char_check_x = true;
+							break;
+						}
+					}
+				}
+				for(int y1=y; y1<y+ironman.getHeight(null); y1++) {
+					for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
+						if(y1 == y2) {
+							char_check_y = true;
+							break;
+						}
+					}
+				}
+				if(char_check_x == true && char_check_y) {
+					e = new Explosion(k.kill_pos.x, k.kill_pos.y);
+					explo_list.add(e);
+					kill_list.remove(v);
+				}
+				beam_check = false;
+				char_check_x = false;
+				char_check_y = false;
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	public void Map_Move() { // 맵 이동 메소드
 		map_x_1-=2;
@@ -205,24 +284,50 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			e.move();
 		}
 	}
+	public void Draw_Beam() { // 적 이미지 그리는 메소드
+		if(right_beam == true) {
+			beam = tk.getImage("D://images//beam//beam"+beam_img+".png");
+			buffg.drawImage(beam, x+30, y-5, this);
+			beam_img++;
+			beam_count++;
+			if(beam_count < 100 && beam_img==6) {
+				beam_img = 0;
+			}
+			if(beam_count > 100 && beam_img==9) {
+				right_beam = false;
+				right_button = false;
+				beam_count = 0;
+				beam_img = 0;
+				ironman = tk.getImage("D://images//ironman_up.png");
+			}
+		}
+	}
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
 		switch(e.getKeyCode()) {
 		case KeyEvent.VK_W:
 			up = true;
-			ironman = tk.getImage("D://images//ironman_up.png");
+			if(right_button == false && right_beam == false) {
+				ironman = tk.getImage("D://images//ironman_up.png");
+			}
 			break;
 		case KeyEvent.VK_A:
 			left = true;
-			ironman = tk.getImage("D://images//ironman_left.png");
+			if(right_button == false && right_beam == false) {
+				ironman = tk.getImage("D://images//ironman_left.png");
+			}
 			break;
 		case KeyEvent.VK_S:
 			down = true;
-			ironman = tk.getImage("D://images//ironman_down.png");
+			if(right_button == false && right_beam == false) {
+				ironman = tk.getImage("D://images//ironman_down.png");
+			}
 			break;
 		case KeyEvent.VK_D:
 			right = true;
-			ironman = tk.getImage("D://images//ironman_right.png");
+			if(right_button == false && right_beam == false) {
+				ironman = tk.getImage("D://images//ironman_right.png");
+			}
 			break;
 		}
 	}
@@ -271,13 +376,29 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	@Override
 	public void mousePressed(MouseEvent e) {
 		// TODO Auto-generated method stub
-		left_button = true;
+		if(e.isMetaDown() && left_button == false && right_beam == false) {
+			right_button = true;
+			ironman = tk.getImage("D://images//laser.gif");
+		} else if(right_button == false && right_beam == false) {
+			left_button = true;
+		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
-		left_button = false;
+		if(e.isMetaDown()) {
+			if(right_button_count < 50 && right_beam==false) {
+				ironman = tk.getImage("D://images//ironman_up.png");
+				right_button = false;
+			} else if(right_button_count >= 50){
+				right_beam = true;
+				right_button_count = 0;
+				ironman = tk.getImage("D://images//ironman_laser.png");
+			}
+		} else{
+			left_button = false;
+		}
 	}
 }
 class Bullet {
@@ -288,6 +409,20 @@ class Bullet {
 	}
 	public void move() {
 		pos.x += 30;
+	}
+}
+class Laser {
+	Point pos;
+	int laser_img = 0;
+	
+	Laser(int x, int y) {
+		pos = new Point(x, y);
+	}
+	public void laser_move() {
+		laser_img++;
+		if(laser_img >= 6) {
+			laser_img = 0;
+		}
 	}
 }
 class Score {
