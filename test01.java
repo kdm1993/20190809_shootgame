@@ -12,7 +12,7 @@ public class test01 {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		new test02();
+		new test02().start();
 	}
 
 }
@@ -27,23 +27,28 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image kill = tk.getImage("D://images//kill.png");
 	Image map = tk.getImage("D://images//map.jpg");
 	Image map2 = tk.getImage("D://images//map2.png");
+	Image empty_bar = tk.getImage("D://images//hp//EmptyBar.png");
+	Image hp_bar = tk.getImage("D://images//hp//RedBar.png");
 	Image beam;
+	Image bullet_explo;
 	Image buffImage = null;
 	Graphics buffg = null;
 	Thread th;
-	ArrayList bullet_list = new ArrayList();
-	ArrayList kill_list = new ArrayList();
-	ArrayList explo_list = new ArrayList();
+	ArrayList<Bullet> bullet_list = new ArrayList<Bullet>();
+	ArrayList<Kill> kill_list = new ArrayList<Kill>();
+	ArrayList<Explosion> explo_list = new ArrayList<Explosion>();
+	ArrayList<Bullet_Explosion> bullet_explo_list = new ArrayList<Bullet_Explosion>();
 	Image explosion;
 	Bullet b;
+	Bullet_Explosion be;
 	Kill k;
 	Explosion e;
 	int bullet_count = 0, kill_count = 0, right_button_count = 0, beam_count = 0, beam_img=0;
 	boolean left, right, up, down, left_button, left_button_count, right_button;
 	boolean bullet_check_x, bullet_check_y, beam_check;
 	boolean right_beam, char_check_x, char_check_y;
-	
-	public test02() {
+
+	public void start() {
 		Dimension dim = new Dimension(1280, 720);
 		setPreferredSize(dim);
 		pack();
@@ -56,7 +61,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		th = new Thread(this);
 		th.start();
 	}
-	
 	public void paint(Graphics g) {
 		buffImage = createImage(f_width, f_height);
 		buffg = buffImage.getGraphics();
@@ -67,6 +71,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		Draw_Bullet();
 		Draw_Kill();
 		Draw_Explosion();
+		Draw_Bullet_Explosion();
 		Draw_Beam();
 		g.drawImage(buffImage, 0, 0, this);
 	}
@@ -89,15 +94,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-	}
-	public void Draw() {
-		buffg.clearRect(0, 30, f_width, f_height);
-		buffg.drawImage(map, map_x_1, 0, this);
-		buffg.drawImage(map2, map_x_2, 0, this);
-		buffg.setColor(Color.blue);
-		buffg.setFont(new Font("휴먼둥근헤드라인", Font.BOLD, 30));
-		buffg.drawString("SCORE : " + new Score().score, 1000, 58);
-		buffg.drawImage(ironman, x, y, this);
 	}
 	public void KeyProcess() {
 		if(up == true && y>30) {
@@ -149,26 +145,35 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 					if(v!=kill_list.size()) {
 						k = (Kill) kill_list.get(v);
 					}
+					exit_For:
 					for(int x1=b.pos.x; x1<b.pos.x+bullet.getWidth(null); x1++) {
 						for(int x2=k.kill_pos.x; x2<k.kill_pos.x+kill.getWidth(null); x2++) {
 							if(x1 == x2) {
 								bullet_check_x = true;
+								break exit_For;
 							}
 						}
 					}
+					exit_For:
 					for(int y1=b.pos.y; y1<b.pos.y+bullet.getHeight(null); y1++) {
 						for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
 							if(y1 == y2) {
 								bullet_check_y = true;
+								break exit_For;
 							}
 						}
 					}
 					if(bullet_check_x == true && bullet_check_y == true) {
-						e = new Explosion(k.kill_pos.x, k.kill_pos.y);
-						new Score().score_plus(10);
-						explo_list.add(e);
+						k.attack();
 						bullet_list.remove(i);
-						kill_list.remove(v);
+						be = new Bullet_Explosion(b.pos.x, b.pos.y);
+						bullet_explo_list.add(be);
+						if(k.hp == 0) {
+							e = new Explosion(k.kill_pos.x, k.kill_pos.y);
+							new Score().score_plus(10);
+							explo_list.add(e);
+							kill_list.remove(v);
+						}
 					}
 					bullet_check_x = false;
 					bullet_check_y = false;
@@ -186,11 +191,12 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 					if(v!=kill_list.size()) {
 						k = (Kill) kill_list.get(v);
 					}
+					exit_For:
 					for(int y1=(this.y-5+17); y1<(this.y-5+28); y1++) {
 						for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
 							if(y1 == y2) {
 								beam_check = true;
-								break;
+								break exit_For;
 							}
 						}
 					}
@@ -213,23 +219,25 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				if(v!=kill_list.size()) {
 					k = (Kill) kill_list.get(v);
 				}
+				exit_For:
 				for(int x1=x; x1<x+ironman.getWidth(null); x1++) {
 					for(int x2=k.kill_pos.x; x2<k.kill_pos.x+kill.getWidth(null); x2++) {
 						if(x1 == x2) {
 							char_check_x = true;
-							break;
+							break exit_For;
 						}
 					}
 				}
+				exit_For:
 				for(int y1=y; y1<y+ironman.getHeight(null); y1++) {
 					for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
 						if(y1 == y2) {
 							char_check_y = true;
-							break;
+							break exit_For;
 						}
 					}
 				}
-				if(char_check_x == true && char_check_y) {
+				if(char_check_x == true && char_check_y == true) {
 					e = new Explosion(k.kill_pos.x, k.kill_pos.y);
 					explo_list.add(e);
 					kill_list.remove(v);
@@ -252,6 +260,15 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			map_x_2 = f_width;
 		}
 	}
+	public void Draw() {
+		buffg.clearRect(0, 30, f_width, f_height);
+		buffg.drawImage(map, map_x_1, 0, this);
+		buffg.drawImage(map2, map_x_2, 0, this);
+		buffg.setColor(Color.blue);
+		buffg.setFont(new Font("휴먼둥근헤드라인", Font.BOLD, 30));
+		buffg.drawString("SCORE : " + new Score().score, 1000, 58);
+		buffg.drawImage(ironman, x, y, this);
+	}
 	public void Draw_Bullet() { //미사일 그리는 메소드
 		for(int i=0; i<bullet_list.size(); i++) {
 			b = (Bullet) bullet_list.get(i);
@@ -266,6 +283,8 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		for(int i=0; i<kill_list.size(); i++) {
 			k = (Kill) kill_list.get(i);
 			buffg.drawImage(kill, k.kill_pos.x, k.kill_pos.y, this);
+			buffg.drawImage(empty_bar, k.kill_pos.x, k.kill_pos.y+kill.getHeight(null), this);
+			buffg.drawImage(hp_bar, k.kill_pos.x, k.kill_pos.y+kill.getHeight(null),(int)k.width,17, this);
 			k.move();
 			if(k.kill_pos.x <= 0-kill.getWidth(this)) {
 				kill_list.remove(i);
@@ -282,6 +301,18 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				explo_list.remove(i);
 			}
 			e.move();
+		}
+	}
+	public void Draw_Bullet_Explosion()  { //폭발이펙트 출력메소드
+		for(int i=0; i<bullet_explo_list.size(); i++) {
+			be = (Bullet_Explosion) bullet_explo_list.get(i);
+			bullet_explo = tk.getImage("D://images//bullet_explo//bullet_explo"+be.effect_num+".png");
+			buffg.drawImage(bullet_explo, be.explo_pos.x, be.explo_pos.y, this);
+			be.next_img();
+			if(be.effect_num >= 37) {
+				bullet_explo_list.remove(i);
+			}
+			be.move();
 		}
 	}
 	public void Draw_Beam() { // 적 이미지 그리는 메소드
@@ -351,25 +382,22 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	}
 	@Override
 	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
+
 		
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -434,6 +462,10 @@ class Score {
 }
 class Kill {
 	Point kill_pos;
+	double max_hp = 3;
+	double hp = 3;
+	int ironman_damage = 1;
+	double width = 124.0;
 	
 	Kill(int x, int y) {
 		kill_pos = new Point(x, y);
@@ -441,12 +473,30 @@ class Kill {
 	public void move() {
 		kill_pos.x -= 5;
 	}
+	public void attack() {
+		hp -= ironman_damage;
+		width = new test02().hp_bar.getWidth(null)*(hp/max_hp);
+	}
 }
 class Explosion {
 	Point explo_pos;
 	int effect_num = 0;
 	
 	Explosion(int x, int y) {
+		explo_pos = new Point(x, y);
+	}
+	public void move() {
+		explo_pos.x -= 5;
+	}
+	public void next_img() {
+		effect_num++;
+	}
+}
+class Bullet_Explosion {
+	Point explo_pos;
+	int effect_num = 0;
+	
+	Bullet_Explosion(int x, int y) {
 		explo_pos = new Point(x, y);
 	}
 	public void move() {
