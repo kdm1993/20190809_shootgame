@@ -18,11 +18,11 @@ public class test01 {
 }
 class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	
-	int x = 100 , y = 300;
-	int map_x_1 = 0, map_x_2 = 1280;
+	static int x = 100 , y = 300;
+	static int map_x_1 = 0, map_x_2 = 1280;
 	int f_width = 1280, f_height=710;
-	Toolkit tk = Toolkit.getDefaultToolkit();
-	Image ironman = tk.getImage("D://images//ironman_up.png");
+	static Toolkit tk = Toolkit.getDefaultToolkit();
+	static Image ironman = tk.getImage("D://images//ironman_up.png");
 	Image bullet = tk.getImage("D://images//bullet.png");
 	Image kill = tk.getImage("D://images//kill.png");
 	Image map = tk.getImage("D://images//map.jpg");
@@ -34,19 +34,19 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image buffImage = null;
 	Graphics buffg = null;
 	Thread th;
-	ArrayList<Bullet> bullet_list = new ArrayList<Bullet>();
-	ArrayList<Kill> kill_list = new ArrayList<Kill>();
-	ArrayList<Explosion> explo_list = new ArrayList<Explosion>();
-	ArrayList<Bullet_Explosion> bullet_explo_list = new ArrayList<Bullet_Explosion>();
+	static ArrayList<Bullet> bullet_list = new ArrayList<Bullet>();
+	static ArrayList<Kill> kill_list = new ArrayList<Kill>();
+	static ArrayList<Explosion> explo_list = new ArrayList<Explosion>();
+	static ArrayList<Bullet_Explosion> bullet_explo_list = new ArrayList<Bullet_Explosion>();
 	Image explosion;
 	Bullet b;
 	Bullet_Explosion be;
 	Kill k;
 	Explosion e;
-	int bullet_count = 0, kill_count = 0, right_button_count = 0, beam_count = 0, beam_img=0;
-	boolean left, right, up, down, left_button, left_button_count, right_button;
-	boolean bullet_check_x, bullet_check_y, beam_check;
-	boolean right_beam, char_check_x, char_check_y;
+	static int bullet_count = 0, kill_count = 0, right_button_count = 0, beam_count = 0, beam_img=0;
+	static boolean left, right, up, down, left_button, left_button_count, right_button;
+	static boolean bullet_check_x, bullet_check_y, beam_check;
+	static boolean right_beam, char_check_x, char_check_y;
 
 	public void start() {
 		Dimension dim = new Dimension(1280, 720);
@@ -60,6 +60,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		setVisible(true);
 		th = new Thread(this);
 		th.start();
+		new Sub_Thread().sub_start();
 	}
 	public void paint(Graphics g) {
 		buffImage = createImage(f_width, f_height);
@@ -81,13 +82,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		try {
 			while(true) {
 				KeyProcess();
-				BulletProcess();
-				KillProcess();
-				LaserProcess();
-				Bullet_Check();
-				Beam_Check();
-				Char_Check();
-				Map_Move();
 				repaint();
 				Thread.sleep(20);
 			}
@@ -109,157 +103,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			x+=10;
 		}
 	}
-	public void BulletProcess() {
-		bullet_count++;
-		if(left_button == true && bullet_count>=7) {
-			b = new Bullet(x+ironman.getWidth(null), y);
-			bullet_list.add(b);
-			bullet_count = 0;
-		}
-	}
-	public void KillProcess() {
-		kill_count++;
-		if(kill_count>=20) {
-			k = new Kill(f_width, (int)(Math.random()*((f_height-kill.getHeight(null)-100)))+30);
-			kill_list.add(k);
-			kill_count = 0;
-		}
-	}
-	public void LaserProcess() {
-		if(right_button == true && right_beam==false) {
-			right_button_count++;
-			if(right_button_count >= 50) {
-				ironman = tk.getImage("D://images//laser1.gif");
-			}
-		} else {
-			right_button_count = 0;
-		}
-	}
-	public void Bullet_Check() { //미사일과 적 이미지 충돌체크 메소드
-		try {
-			for(int i=0; i<bullet_list.size(); i++) {
-				for(int v=0; v<kill_list.size(); v++) {
-					if(i!=bullet_list.size()) {
-						b = (Bullet) bullet_list.get(i);
-					}
-					if(v!=kill_list.size()) {
-						k = (Kill) kill_list.get(v);
-					}
-					exit_For:
-					for(int x1=b.pos.x; x1<b.pos.x+bullet.getWidth(null); x1++) {
-						for(int x2=k.kill_pos.x; x2<k.kill_pos.x+kill.getWidth(null); x2++) {
-							if(x1 == x2) {
-								bullet_check_x = true;
-								break exit_For;
-							}
-						}
-					}
-					exit_For:
-					for(int y1=b.pos.y; y1<b.pos.y+bullet.getHeight(null); y1++) {
-						for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
-							if(y1 == y2) {
-								bullet_check_y = true;
-								break exit_For;
-							}
-						}
-					}
-					if(bullet_check_x == true && bullet_check_y == true) {
-						k.attack();
-						bullet_list.remove(i);
-						be = new Bullet_Explosion(b.pos.x, b.pos.y);
-						bullet_explo_list.add(be);
-						if(k.hp == 0) {
-							e = new Explosion(k.kill_pos.x, k.kill_pos.y);
-							new Score().score_plus(10);
-							explo_list.add(e);
-							kill_list.remove(v);
-						}
-					}
-					bullet_check_x = false;
-					bullet_check_y = false;
-				}
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-	}
-	public void Beam_Check() {
-		if(right_beam == true) {
-			try {
-				for(int v=0; v<kill_list.size(); v++) {
-					if(v!=kill_list.size()) {
-						k = (Kill) kill_list.get(v);
-					}
-					exit_For:
-					for(int y1=(this.y-5+17); y1<(this.y-5+28); y1++) {
-						for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
-							if(y1 == y2) {
-								beam_check = true;
-								break exit_For;
-							}
-						}
-					}
-					if(beam_check == true) {
-						e = new Explosion(k.kill_pos.x, k.kill_pos.y);
-						new Score().score_plus(10);
-						explo_list.add(e);
-						kill_list.remove(v);
-					}
-					beam_check = false;
-				}
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	public void Char_Check() { //캐릭터와 적 충돌체크
-		try {
-			for(int v=0; v<kill_list.size(); v++) {
-				if(v!=kill_list.size()) {
-					k = (Kill) kill_list.get(v);
-				}
-				exit_For:
-				for(int x1=x; x1<x+ironman.getWidth(null); x1++) {
-					for(int x2=k.kill_pos.x; x2<k.kill_pos.x+kill.getWidth(null); x2++) {
-						if(x1 == x2) {
-							char_check_x = true;
-							break exit_For;
-						}
-					}
-				}
-				exit_For:
-				for(int y1=y; y1<y+ironman.getHeight(null); y1++) {
-					for(int y2=k.kill_pos.y; y2<k.kill_pos.y+kill.getHeight(null); y2++) {
-						if(y1 == y2) {
-							char_check_y = true;
-							break exit_For;
-						}
-					}
-				}
-				if(char_check_x == true && char_check_y == true) {
-					e = new Explosion(k.kill_pos.x, k.kill_pos.y);
-					explo_list.add(e);
-					kill_list.remove(v);
-				}
-				beam_check = false;
-				char_check_x = false;
-				char_check_y = false;
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-	public void Map_Move() { // 맵 이동 메소드
-		map_x_1-=2;
-		map_x_2-=2;
-		if(map_x_1 == (f_width*-1)) {
-			map_x_1 = f_width;
-		}
-		if(map_x_2 == (f_width*-1)) {
-			map_x_2 = f_width;
-		}
-	}
+	
 	public void Draw() {
 		buffg.clearRect(0, 30, f_width, f_height);
 		buffg.drawImage(map, map_x_1, 0, this);
@@ -271,23 +115,27 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	}
 	public void Draw_Bullet() { //미사일 그리는 메소드
 		for(int i=0; i<bullet_list.size(); i++) {
-			b = (Bullet) bullet_list.get(i);
-			buffg.drawImage(bullet, b.pos.x, b.pos.y+20, this);
-			b.move();
-			if(b.pos.x > f_width) {
-				bullet_list.remove(i);
+			if(bullet_list.size() > 0) {
+				b = (Bullet) bullet_list.get(i);
+				buffg.drawImage(bullet, b.pos.x, b.pos.y+20, this);
+				b.move();
+				if(b.pos.x > f_width) {
+					bullet_list.remove(i);
+				}
 			}
 		}
 	}
 	public void Draw_Kill() { // 적 이미지 그리는 메소드 
 		for(int i=0; i<kill_list.size(); i++) {
-			k = (Kill) kill_list.get(i);
-			buffg.drawImage(kill, k.kill_pos.x, k.kill_pos.y, this);
-			buffg.drawImage(empty_bar, k.kill_pos.x, k.kill_pos.y+kill.getHeight(null), this);
-			buffg.drawImage(hp_bar, k.kill_pos.x, k.kill_pos.y+kill.getHeight(null),(int)k.width,17, this);
-			k.move();
-			if(k.kill_pos.x <= 0-kill.getWidth(this)) {
-				kill_list.remove(i);
+			if(kill_list.size() > 0) {
+				k = (Kill) kill_list.get(i);
+				buffg.drawImage(kill, k.kill_pos.x, k.kill_pos.y, this);
+				buffg.drawImage(empty_bar, k.kill_pos.x, k.kill_pos.y+kill.getHeight(null), this);
+				buffg.drawImage(hp_bar, k.kill_pos.x, k.kill_pos.y+kill.getHeight(null),(int)k.width,17, this);
+				k.move();
+				if(k.kill_pos.x <= 0-kill.getWidth(this)) {
+					kill_list.remove(i);
+				}
 			}
 		}
 	}
@@ -504,5 +352,181 @@ class Bullet_Explosion {
 	}
 	public void next_img() {
 		effect_num++;
+	}
+}
+class Sub_Thread extends Thread {
+	
+	test02 t = new test02();
+	
+	public void sub_start() {
+		Thread th2 = new Thread(this);
+		th2.start();
+	}
+	public void run() {
+		while(true) {
+			BulletProcess();
+			KillProcess();
+			LaserProcess();
+			Bullet_Check();
+			Beam_Check();
+			Char_Check();
+			Map_Move();
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	public void BulletProcess() {
+		t.bullet_count++;
+		if(t.left_button == true && t.bullet_count>=7) {
+			t.b = new Bullet(t.x+t.ironman.getWidth(null), t.y);
+			t.bullet_list.add(t.b);
+			t.bullet_count = 0;
+		}
+	}
+	public void KillProcess() {
+		t.kill_count++;
+		if(t.kill_count>=20) {
+			t.k = new Kill(t.f_width, (int)(Math.random()*((t.f_height-t.kill.getHeight(null)-100)))+30);
+			t.kill_list.add(t.k);
+			t.kill_count = 0;
+		}
+	}
+	public void LaserProcess() {
+		if(t.right_button == true && t.right_beam==false) {
+			t.right_button_count++;
+			if(t.right_button_count >= 50) {
+				t.ironman = t.tk.getImage("D://images//laser1.gif");
+			}
+		} else {
+			t.right_button_count = 0;
+		}
+	}
+	public void Bullet_Check() { //미사일과 적 이미지 충돌체크 메소드
+		if(t.bullet_list.size() != 0) {
+			for(int i=0; i<t.bullet_list.size(); i++) {
+				for(int v=0; v<t.kill_list.size(); v++) {
+					if(i!=t.bullet_list.size()) {
+						t.b = (Bullet) t.bullet_list.get(i);
+					}
+					if(v!=t.kill_list.size()) {
+						t.k = (Kill) t.kill_list.get(v);
+					}
+					exit_For:
+					for(int x1=t.b.pos.x; x1<t.b.pos.x+t.bullet.getWidth(null); x1++) {
+						for(int x2=t.k.kill_pos.x; x2<t.k.kill_pos.x+t.kill.getWidth(null); x2++) {
+							if(x1 == x2) {
+								t.bullet_check_x = true;
+								break exit_For;
+							}
+						}
+					}
+					exit_For:
+					for(int y1=t.b.pos.y; y1<t.b.pos.y+t.bullet.getHeight(null); y1++) {
+						for(int y2=t.k.kill_pos.y; y2<t.k.kill_pos.y+t.kill.getHeight(null); y2++) {
+							if(y1 == y2) {
+								t.bullet_check_y = true;
+								break exit_For;
+							}
+						}
+					}
+					if(t.bullet_check_x == true && t.bullet_check_y == true) {
+						t.k.attack();
+						if(t.bullet_list.size() > 0 && t.bullet_list.size()!=i) {
+							t.bullet_list.remove(i);
+						}
+						t.be = new Bullet_Explosion(t.b.pos.x, t.b.pos.y);
+						t.bullet_explo_list.add(t.be);
+						if(t.k.hp == 0) {
+							t.e = new Explosion(t.k.kill_pos.x, t.k.kill_pos.y);
+							new Score().score_plus(10);
+							t.explo_list.add(t.e);
+							t.kill_list.remove(v);
+						}
+					}
+					t.bullet_check_x = false;
+					t.bullet_check_y = false;
+				}
+			}
+		}
+	}
+	public void Beam_Check() {
+		if(t.right_beam == true) {
+			try {
+				for(int v=0; v<t.kill_list.size(); v++) {
+					if(v!=t.kill_list.size()) {
+						t.k = (Kill) t.kill_list.get(v);
+					}
+					exit_For:
+					for(int y1=(this.t.y-5+17); y1<(this.t.y-5+28); y1++) {
+						for(int y2=t.k.kill_pos.y; y2<t.k.kill_pos.y+t.kill.getHeight(null); y2++) {
+							if(y1 == y2) {
+								t.beam_check = true;
+								break exit_For;
+							}
+						}
+					}
+					if(t.beam_check == true) {
+						t.e = new Explosion(t.k.kill_pos.x, t.k.kill_pos.y);
+						new Score().score_plus(10);
+						t.explo_list.add(t.e);
+						t.kill_list.remove(v);
+					}
+					t.beam_check = false;
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	public void Char_Check() { //캐릭터와 적 충돌체크
+		try {
+			for(int v=0; v<t.kill_list.size(); v++) {
+				if(v!=t.kill_list.size()) {
+					t.k = (Kill) t.kill_list.get(v);
+				}
+				exit_For:
+				for(int x1=t.x; x1<t.x+t.ironman.getWidth(null); x1++) {
+					for(int x2=t.k.kill_pos.x; x2<t.k.kill_pos.x+t.kill.getWidth(null); x2++) {
+						if(x1 == x2) {
+							t.char_check_x = true;
+							break exit_For;
+						}
+					}
+				}
+				exit_For:
+				for(int y1=t.y; y1<t.y+t.ironman.getHeight(null); y1++) {
+					for(int y2=t.k.kill_pos.y; y2<t.k.kill_pos.y+t.kill.getHeight(null); y2++) {
+						if(y1 == y2) {
+							t.char_check_y = true;
+							break exit_For;
+						}
+					}
+				}
+				if(t.char_check_x == true && t.char_check_y == true) {
+					t.e = new Explosion(t.k.kill_pos.x, t.k.kill_pos.y);
+					t.explo_list.add(t.e);
+					t.kill_list.remove(v);
+				}
+				t.beam_check = false;
+				t.char_check_x = false;
+				t.char_check_y = false;
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public void Map_Move() { // 맵 이동 메소드
+		t.map_x_1-=2;
+		t.map_x_2-=2;
+		if(t.map_x_1 == (t.f_width*-1)) {
+			t.map_x_1 = t.f_width;
+		}
+		if(t.map_x_2 == (t.f_width*-1)) {
+			t.map_x_2 = t.f_width-1;
+		}
 	}
 }
