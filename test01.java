@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.font.TextLayout;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 
@@ -13,13 +14,14 @@ public class test01 {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		new test02().start();
+		new Sub_Thread().sub_start();
 	}
 
 }
 class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	
 	static int x = 100 , y = 300;
-	static int map_x_1 = 0, map_x_2 = 1280;
+	int map_x_1 = 0, map_x_2 = 1280;
 	int f_width = 1280, f_height=710;
 	static Toolkit tk = Toolkit.getDefaultToolkit();
 	static Image ironman = tk.getImage("D://images//ironman_up.png");
@@ -30,6 +32,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image empty_bar = tk.getImage("D://images//hp//EmptyBar.png");
 	Image hp_bar = tk.getImage("D://images//hp//RedBar.png");
 	Image beam;
+	Image score;
 	Image bullet_explo;
 	Image buffImage = null;
 	Graphics buffg = null;
@@ -47,8 +50,10 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static boolean left, right, up, down, left_button, left_button_count, right_button;
 	static boolean bullet_check_x, bullet_check_y, beam_check;
 	static boolean right_beam, char_check_x, char_check_y;
+	boolean test_count_1, test_count_2;
 
 	public void start() {
+		hp_bar = tk.getImage("D://images//hp//RedBar.png");
 		Dimension dim = new Dimension(1280, 720);
 		setPreferredSize(dim);
 		pack();
@@ -60,7 +65,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		setVisible(true);
 		th = new Thread(this);
 		th.start();
-		new Sub_Thread().sub_start();
 	}
 	public void paint(Graphics g) {
 		buffImage = createImage(f_width, f_height);
@@ -69,11 +73,13 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	}
 	public void update(Graphics g) {
 		Draw();
+		Draw_Score();
 		Draw_Bullet();
 		Draw_Kill();
 		Draw_Explosion();
 		Draw_Bullet_Explosion();
 		Draw_Beam();
+		Map_Move();
 		g.drawImage(buffImage, 0, 0, this);
 	}
 	@Override
@@ -106,12 +112,45 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	
 	public void Draw() {
 		buffg.clearRect(0, 30, f_width, f_height);
+		if(test_count_1 == false) 
+		{			
+			bullet_explo_list.add(new Bullet_Explosion(-100, -100));
+			be = bullet_explo_list.get(0);
+			be.next_img();
+			if(be.bullet_effect_num >= 37) {
+				bullet_explo_list.remove(0);				
+				test_count_1 = true;			
+			}
+		}
+		if(test_count_2 == false) 
+		{			
+			explo_list.add(new Explosion(-100, -100));
+			e = explo_list.get(0);
+			e.next_img();
+			if(e.explo_effect_num >= 19) {
+				bullet_explo_list.remove(0);				
+				test_count_2 = true;			
+			}
+		}
 		buffg.drawImage(map, map_x_1, 0, this);
 		buffg.drawImage(map2, map_x_2, 0, this);
-		buffg.setColor(Color.blue);
-		buffg.setFont(new Font("휴먼둥근헤드라인", Font.BOLD, 30));
-		buffg.drawString("SCORE : " + new Score().score, 1000, 58);
 		buffg.drawImage(ironman, x, y, this);
+	}
+	public void Draw_Score() { //점수 그리는 메소드
+		Score sc = new Score();
+		
+		int num_1 = sc.score/1000;
+		int num_2 = (sc.score%1000)/100;
+		int num_3 = (sc.score%100)/10;
+		
+		score = tk.getImage("D://images//number//"+num_1+".png");
+		buffg.drawImage(score, 1000, 40, this);
+		score = tk.getImage("D://images//number//"+num_2+".png");
+		buffg.drawImage(score, 1030, 40, this);
+		score = tk.getImage("D://images//number//"+num_3+".png");
+		buffg.drawImage(score, 1060, 40, this);
+		score = tk.getImage("D://images//number//0.png");
+		buffg.drawImage(score, 1090, 40, this);
 	}
 	public void Draw_Bullet() { //미사일 그리는 메소드
 		for(int i=0; i<bullet_list.size(); i++) {
@@ -142,25 +181,25 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	public void Draw_Explosion()  { //폭발이펙트 출력메소드
 		for(int i=0; i<explo_list.size(); i++) {
 			e = (Explosion) explo_list.get(i);
-			explosion = tk.getImage("D://images//explosion//explosion"+e.effect_num+".png");
+			explosion = tk.getImage("D://images//explosion//explosion"+e.explo_effect_num+".png");
 			buffg.drawImage(explosion, e.explo_pos.x, e.explo_pos.y, this);
 			e.next_img();
-			if(e.effect_num >= 19) {
+			e.move();
+			if(e.explo_effect_num >= 19) {
 				explo_list.remove(i);
 			}
-			e.move();
 		}
 	}
 	public void Draw_Bullet_Explosion()  { //폭발이펙트 출력메소드
 		for(int i=0; i<bullet_explo_list.size(); i++) {
 			be = (Bullet_Explosion) bullet_explo_list.get(i);
-			bullet_explo = tk.getImage("D://images//bullet_explo//bullet_explo"+be.effect_num+".png");
+			bullet_explo = tk.getImage("D://images//bullet_explo//bullet_explo"+be.bullet_effect_num+".png");
 			buffg.drawImage(bullet_explo, be.explo_pos.x, be.explo_pos.y, this);
+			be.move();
 			be.next_img();
-			if(be.effect_num >= 37) {
+			if(be.bullet_effect_num >= 37) {
 				bullet_explo_list.remove(i);
 			}
-			be.move();
 		}
 	}
 	public void Draw_Beam() { // 적 이미지 그리는 메소드
@@ -179,6 +218,16 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				beam_img = 0;
 				ironman = tk.getImage("D://images//ironman_up.png");
 			}
+		}
+	}
+	public void Map_Move() { // 맵 이동 메소드
+		map_x_1-=2;
+		map_x_2-=2;
+		if(map_x_1 == (f_width*-1)) {
+			map_x_1 = f_width;
+		}
+		if(map_x_2 == (f_width*-1)) {
+			map_x_2 = f_width-1;
 		}
 	}
 	public void keyPressed(KeyEvent e) {
@@ -328,7 +377,7 @@ class Kill {
 }
 class Explosion {
 	Point explo_pos;
-	int effect_num = 0;
+	int explo_effect_num = 0;
 	
 	Explosion(int x, int y) {
 		explo_pos = new Point(x, y);
@@ -337,12 +386,12 @@ class Explosion {
 		explo_pos.x -= 5;
 	}
 	public void next_img() {
-		effect_num++;
+		explo_effect_num++;
 	}
 }
 class Bullet_Explosion {
 	Point explo_pos;
-	int effect_num = 0;
+	int bullet_effect_num = 0;
 	
 	Bullet_Explosion(int x, int y) {
 		explo_pos = new Point(x, y);
@@ -351,7 +400,7 @@ class Bullet_Explosion {
 		explo_pos.x -= 5;
 	}
 	public void next_img() {
-		effect_num++;
+		bullet_effect_num++;
 	}
 }
 class Sub_Thread extends Thread {
@@ -370,7 +419,6 @@ class Sub_Thread extends Thread {
 			Bullet_Check();
 			Beam_Check();
 			Char_Check();
-			Map_Move();
 			try {
 				Thread.sleep(20);
 			} catch (InterruptedException e) {
@@ -517,16 +565,6 @@ class Sub_Thread extends Thread {
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
-		}
-	}
-	public void Map_Move() { // 맵 이동 메소드
-		t.map_x_1-=2;
-		t.map_x_2-=2;
-		if(t.map_x_1 == (t.f_width*-1)) {
-			t.map_x_1 = t.f_width;
-		}
-		if(t.map_x_2 == (t.f_width*-1)) {
-			t.map_x_2 = t.f_width-1;
 		}
 	}
 }
