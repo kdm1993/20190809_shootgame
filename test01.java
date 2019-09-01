@@ -44,6 +44,8 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image hp_bar = tk.getImage("D://images//hp//RedBar.png");
 	Image coin = tk.getImage("D://images//coin.gif");
 	Image kill_bullet = tk.getImage("D://images//kill_bullet.png");
+	static Image ironman_sub = tk.getImage("D://images//ironman_sub.png");
+	static Image booster = tk.getImage("D://images//booster.gif");
 	Image char_ui;
 	Image beam;
 	Image item_get = tk.getImage("D://images//item_get//item_get0.png");
@@ -63,7 +65,8 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static ArrayList<Hit_Explosion> hit_list = new ArrayList<Hit_Explosion>();
 	static ArrayList<Item_Effect> item_list = new ArrayList<Item_Effect>();
 	static ArrayList<Item_Get_Effect> item_get_list = new ArrayList<Item_Get_Effect>();
-	Image explosion;
+	static ArrayList<Ironman_sub> ironman_sub_list = new ArrayList<Ironman_sub>();
+ 	Image explosion;
 	Bullet b;
 	Charge_Effect ce;
 	Bullet_Explosion be;
@@ -76,6 +79,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Item_Get_Effect ige;
 	GunShot_Effect ge1;
 	GunShot_Effect ge2;
+	Ironman_sub sub;
 	static int bullet_count_1 = 0, bullet_count_2 = 0, bullet_count_3 = 0, kill_count = 0, right_button_count = 0, beam_count = 0, beam_img=0;
 	static boolean player_1_left, player_1_right, player_1_up, player_1_down, player_1_left_button, player_1_left_button_count, player_1_right_button;
 	static boolean player_2_left, player_2_right, player_2_up, player_2_down, player_2_left_button, player_2_left_button_count, player_2_right_button;
@@ -124,6 +128,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		Draw_Item();
 		Draw_GunShot_effect();
 		Draw_Item_effect();
+		Draw_Ironman_sub();
 		Draw_Game_UI();
 		Draw_Score();
 		Map_Move();
@@ -247,8 +252,33 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		for(int i=0; i<p_1_bullet_list.size(); i++) {
 			if(p_1_bullet_list.size() > 0) {
 				b = (Bullet) p_1_bullet_list.get(i);
-				buffg.drawImage(bullet, b.pos.x, b.pos.y+20, this);
-				b.move();
+				if(player_1_char.equals("ironman")) {
+					buffg.drawImage(bullet, b.pos.x, b.pos.y+20, this);
+					b.move();					
+				}
+				if(player_1_char.equals("warmachine")) {
+					if(b.bullet_type == 0) {
+						gun_bullet = tk.getImage("D://images//bullet//bullet1.png");
+						buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+						b.move4();
+					} else if(b.bullet_type == 1) {
+						gun_bullet = tk.getImage("D://images//bullet//bullet2.png");
+						buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+						b.move2();					
+					} else if(b.bullet_type == 2) {
+						gun_bullet = tk.getImage("D://images//bullet//bullet3.png");
+						buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+						b.move();
+					} else if(b.bullet_type == 3) {
+						gun_bullet = tk.getImage("D://images//bullet//bullet0.png");
+						buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+						b.move3();
+					} else if(b.bullet_type == 4) {
+						gun_bullet = tk.getImage("D://images//bullet//bullet4.png");
+						buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+						b.move5();
+					}
+				}
 				if(b.pos.x > f_width) {
 					p_1_bullet_list.remove(i);
 				}
@@ -256,38 +286,44 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		}
 	}
 	public void Draw_P2_Bullet() { //플레이어 2 미사일 그리는 메소드
-		for(int i=0; i<p_2_bullet_list.size(); i++) {
-			if(p_2_bullet_list.size() > 0) {
-				b = (Bullet) p_2_bullet_list.get(i);
-				if(b.bullet_type == 0) {
-					gun_bullet = tk.getImage("D://images//bullet//bullet1.png");
-					buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
-					b.move2();
-				}
-				if(b.bullet_type == 1) {
-					gun_bullet = tk.getImage("D://images//bullet//bullet2.png");
-					buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
-					b.move();					
-				}
-				if(b.bullet_type == 2) {
-					gun_bullet = tk.getImage("D://images//bullet//bullet3.png");
-					buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
-					b.move3();
-				}
-				if(b.bullet_type == 3) {
-					gun_bullet = tk.getImage("D://images//bullet//bullet0.png");
-					buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
-					b.move4();
-				}
-				if(b.bullet_type == 4) {
-					gun_bullet = tk.getImage("D://images//bullet//bullet4.png");
-					buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
-					b.move5();
-				}
-				if(b.pos.x > f_width) {
-					p_2_bullet_list.remove(i);
+		try {
+			for(int i=0; i<p_2_bullet_list.size(); i++) {
+				if(p_2_bullet_list.size() > 0) {
+					b = (Bullet) p_2_bullet_list.get(i);
+					if(player_2_char.equals("ironman")) {
+						buffg.drawImage(bullet, b.pos.x, b.pos.y+20, this);
+						b.move();					
+					}
+					if(player_2_char.equals("warmachine")) {
+						if(b.bullet_type == 0) {
+							gun_bullet = tk.getImage("D://images//bullet//bullet0.png");
+							buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+							b.move4();
+						} else if(b.bullet_type == 1) {
+							gun_bullet = tk.getImage("D://images//bullet//bullet1.png");
+							buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+							b.move2();					
+						} else if(b.bullet_type == 2) {
+							gun_bullet = tk.getImage("D://images//bullet//bullet2.png");
+							buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+							b.move();
+						} else if(b.bullet_type == 3) {
+							gun_bullet = tk.getImage("D://images//bullet//bullet3.png");
+							buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+							b.move3();
+						} else if(b.bullet_type == 4) {
+							gun_bullet = tk.getImage("D://images//bullet//bullet4.png");
+							buffg.drawImage(gun_bullet, b.pos.x, b.pos.y+20, this);
+							b.move5();
+						}
+					}
+					if(b.pos.x > f_width) {
+						p_2_bullet_list.remove(i);
+					}
 				}
 			}
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 	public void Draw_Kill() { // 적 이미지 그리는 메소드 
@@ -370,6 +406,18 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				beam_img = 0;
 				player_1_char_img = tk.getImage("D://images//ironman_up.png");
 			}
+		}
+	}
+	public void Draw_Ironman_sub() { // 아이언맨 보조무기 그리는 메소드
+		if(player_1_char.equals("ironman")) {
+			for(int k=0; k<ironman_sub_list.size(); k++) {
+				sub = ironman_sub_list.get(k);
+				buffg.drawImage(ironman_sub, sub.pos.x, sub.pos.y, this);
+				buffg.drawImage(booster, sub.pos.x-booster.getWidth(null), sub.pos.y+3, this);
+				sub.move(k);
+			}
+		} else {
+			
 		}
 	}
 	public void Draw_Coin() {
@@ -692,7 +740,7 @@ class Effect_Class {
 }
 class Bullet extends Effect_Class {
 	
-	int special = 4;
+	static int special = 0;
 	int bullet_type = 0;
 	
 	Bullet(int x, int y) {
@@ -822,16 +870,14 @@ class Item_Effect extends Effect_Class {
 	
 	Item_Effect(int x, int y) {
 		pos = new Point(x, y);
-		item_num = (int)(Math.random()*9);
-		if(item_num == 0 || item_num == 1 || item_num == 7) {
+		item_num = (int)(Math.random()*8);
+		if(item_num == 0 || item_num == 1 || item_num == 6) {
 			item_name = "heart";
-		} else if(item_num == 2 || item_num == 3 || item_num == 8) {
+		} else if(item_num == 2 || item_num == 3 || item_num == 7) {
 			item_name = "energy";
 		} else if(item_num == 4) {
-			item_name = "damage";
-		} else if(item_num == 5) {
 			item_name = "attackspeed";
-		} else if(item_num == 6) {
+		} else if(item_num == 5) {
 			item_name = "pierce";
 		}
 		item = test02.tk.getImage("D://images//item//"+item_name+".gif");
@@ -876,7 +922,7 @@ class Charge_Effect extends Effect_Class {
 				effect_num+=0.1;				
 			}
 			if(test02.right_button_count >= 50) {
-				effect_num+=0.2;
+				effect_num+=0.5;
 			}
 		}
 	}
@@ -902,6 +948,44 @@ class GunShot_Effect extends Effect_Class {
 		}
 	}
 }
+class Ironman_sub extends Effect_Class {
+	
+	Ironman_sub(int x, int y) {
+		pos = new Point(x, y);
+	}
+	public void move(int y) {
+		if(pos.x > test02.player_1_x-test02.ironman_sub.getWidth(null)) {
+			pos.x -= 2;
+		} else if(pos.x < test02.player_1_x-test02.ironman_sub.getWidth(null)) {
+			pos.x += 2;
+		}
+		if(y == 0) {
+			if(pos.y > test02.player_1_y) {
+				pos.y -= 2;
+			} else if(pos.y < test02.player_1_y) {
+				pos.y += 2;
+			}
+		} else if(y == 1) {
+			if(pos.y > test02.player_1_y+test02.player_1_char_img.getHeight(null)/4) {
+				pos.y -= 2;
+			} else if(pos.y < test02.player_1_y+test02.player_1_char_img.getHeight(null)/4) {
+				pos.y += 2;
+			}
+		} else if(y == 2) {
+			if(pos.y > test02.player_1_y+test02.player_1_char_img.getHeight(null)/2) {
+				pos.y -= 2;
+			} else if(pos.y < test02.player_1_y+test02.player_1_char_img.getHeight(null)/2) {
+				pos.y += 2;
+			}
+		} else if(y == 3) {
+			if(pos.y > test02.player_1_y+test02.player_1_char_img.getHeight(null)/4+test02.player_1_char_img.getHeight(null)/2) {
+				pos.y -= 2;
+			} else if(pos.y < test02.player_1_y+test02.player_1_char_img.getHeight(null)/4+test02.player_1_char_img.getHeight(null)/2) {
+				pos.y += 2;
+			}
+		}
+	}
+}
 class Sub_Thread extends Thread {
 	
 	test02 t = new test02();
@@ -909,6 +993,7 @@ class Sub_Thread extends Thread {
 	public void sub_start() {
 		start();
 	}
+	@Override
 	public void run() {
 		while(true) {
 			BulletProcess();
@@ -933,37 +1018,89 @@ class Sub_Thread extends Thread {
 		t.bullet_count_1++;
 		t.bullet_count_2++;
 		t.bullet_count_3++;
-		if(t.player_1_left_button == true && t.bullet_count_1>=10) {
-			t.b = new Bullet(t.player_1_x+t.player_1_char_img.getWidth(null), t.player_1_y);
-			t.p_1_bullet_list.add(t.b);
+		if(t.player_1_left_button == true && t.bullet_count_1>=t.player_1_as) {
 			t.bullet_count_1 = 0;
+			if(t.player_1_char.equals("ironman") && t.ironman_sub_list.size() != 0) {
+				for(int k=0; k<t.ironman_sub_list.size(); k++) {
+					t.sub = (Ironman_sub) t.ironman_sub_list.get(k);
+					if(t.player_1_pierce > k) {
+						t.b = new Bullet(t.sub.pos.x+t.ironman_sub.getWidth(null)+20, t.sub.pos.y-23);
+						t.p_1_bullet_list.add(t.b);
+					}
+				}				
+			} else if(t.player_1_char.equals("warmachine")) {
+				t.b = new Bullet(t.player_1_x+t.player_1_char_img.getWidth(null), t.player_1_y);
+				t.p_1_bullet_list.add(t.b);
+				if(t.b.special > 0) {
+					t.b = new Bullet(t.player_1_x+t.player_1_char_img.getWidth(null), t.player_1_y-10, 1);
+					t.p_1_bullet_list.add(t.b);
+				}
+				if(t.b.special > 1) {
+					t.b = new Bullet(t.player_1_x+t.player_1_char_img.getWidth(null), t.player_1_y-10, 3);
+					t.p_1_bullet_list.add(t.b);
+				}
+				if(t.b.special > 2) {
+					t.b = new Bullet(t.player_1_x+t.player_1_char_img.getWidth(null), t.player_1_y-10, 0);
+					t.p_1_bullet_list.add(t.b);
+				}
+				if(t.b.special > 3) {
+					t.b = new Bullet(t.player_1_x+t.player_1_char_img.getWidth(null), t.player_1_y-10, 4);
+					t.p_1_bullet_list.add(t.b);
+				}
+			}
 		}
 		if(t.dual == true) {
-			if(t.player_2_left_button == true && t.bullet_count_2>=10) {
-				t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 2);
+			if(t.player_2_left_button == true && t.bullet_count_2>=t.player_2_as) {
+				t.bullet_count_2 = 0;
+				if(t.player_2_char.equals("ironman") && t.ironman_sub_list.size() != 0) {
+					for(int k=0; k<t.ironman_sub_list.size(); k++) {
+						t.sub = (Ironman_sub) t.ironman_sub_list.get(k);
+						if(t.player_2_pierce > k) {
+							t.b = new Bullet(t.sub.pos.x+t.ironman_sub.getWidth(null)+20, t.sub.pos.y-23);
+							t.p_2_bullet_list.add(t.b);
+						}
+					}				
+				} else if(t.player_2_char.equals("warmachine")) {
+					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 2);
+					t.p_2_bullet_list.add(t.b);
+					if(t.b.special > 0) {
+						t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 1);
+						t.p_2_bullet_list.add(t.b);
+					}
+					if(t.b.special > 1) {
+						t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 3);
+						t.p_2_bullet_list.add(t.b);
+					}
+					if(t.b.special > 2) {
+						t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 0);
+						t.p_2_bullet_list.add(t.b);
+					}
+					if(t.b.special > 3) {
+						t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 4);
+						t.p_2_bullet_list.add(t.b);
+					}
+				}
+			}
+			if(t.player_2_right_button == true && t.bullet_count_3>=t.player_2_as) {
+				t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-20, 2);
 				t.p_2_bullet_list.add(t.b);
+				t.bullet_count_3 = 0;
 				if(t.b.special > 0) {
-					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 1);
+					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-20, 1);
 					t.p_2_bullet_list.add(t.b);
 				}
 				if(t.b.special > 1) {
-					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 3);
+					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-20, 3);
 					t.p_2_bullet_list.add(t.b);
 				}
 				if(t.b.special > 2) {
-					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 0);
+					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-20, 0);
 					t.p_2_bullet_list.add(t.b);
 				}
 				if(t.b.special > 3) {
 					t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-10, 4);
 					t.p_2_bullet_list.add(t.b);
 				}
-				t.bullet_count_2 = 0;
-			}
-			if(t.player_2_right_button == true && t.bullet_count_3>=10) {
-				t.b = new Bullet(t.player_2_x+t.player_2_char_img.getWidth(null), t.player_2_y-20, 1);
-				t.p_2_bullet_list.add(t.b);
-				t.bullet_count_3 = 0;
 			}
 		}
 	}
@@ -1112,14 +1249,14 @@ class Sub_Thread extends Thread {
 						t.k = (Kill) t.kill_list.get(v);
 					}
 					exit_For:
-					for(int y1=(this.t.player_1_y-5+17); y1<(this.t.player_1_y-5+28); y1++) {
-						for(int y2=t.k.pos.y; y2<t.k.pos.y+t.kill.getHeight(null); y2++) {
-							if(y1 == y2) {
-								t.beam_check = true;
-								break exit_For;
+						for(int y1=(this.t.player_1_y-5+17); y1<(this.t.player_1_y-5+28); y1++) {
+							for(int y2=t.k.pos.y; y2<t.k.pos.y+t.kill.getHeight(null); y2++) {
+								if(y1 == y2) {
+									t.beam_check = true;
+									break exit_For;
+								}
 							}
 						}
-					}
 					if(t.beam_check == true) {
 						t.c = new Coin_Effect(t.k.pos.x, t.k.pos.y);
 						t.e = new Explosion(t.k.pos.x, t.k.pos.y);
@@ -1193,11 +1330,51 @@ class Sub_Thread extends Thread {
 					t.item_list.remove(v);
 					t.ige = new Item_Get_Effect(t.ie.pos.x-t.item_get.getWidth(null)/2+5, t.ie.pos.y-t.item_get.getHeight(null)/2+5);
 					t.item_get_list.add(t.ige);
+					if(t.player_1_char.equals("ironman") && t.player_1_pierce < 4 && t.ie.item_name.equals("pierce")) {
+						if(t.player_1_pierce == 0) {
+							t.sub = new Ironman_sub(t.player_1_x-t.ironman_sub.getWidth(null), t.player_1_y);							
+						} else if(t.player_1_pierce == 1) {
+							t.sub = new Ironman_sub(t.player_1_x-t.ironman_sub.getWidth(null), t.player_1_y+t.player_1_char_img.getHeight(null)/4);
+						} else if(t.player_1_pierce == 2) {
+							t.sub = new Ironman_sub(t.player_1_x-t.ironman_sub.getWidth(null), t.player_1_y+t.player_1_char_img.getHeight(null)/2);
+						} else if(t.player_1_pierce == 3) {
+							t.sub = new Ironman_sub(t.player_1_x-t.ironman_sub.getWidth(null), t.player_1_y+t.player_1_char_img.getHeight(null)/4+t.player_1_char_img.getHeight(null)/2);
+						}
+						t.ironman_sub_list.add(t.sub);
+						t.player_1_pierce++;
+					}
+					if(t.player_1_char.equals("warmachine") && t.player_1_pierce < 4 && t.ie.item_name.equals("pierce")) {
+						t.player_1_pierce++;
+						t.b.special++;
+					}
+					if(t.ie.item_name.equals("attackspeed")) {
+						t.player_1_as--;
+					}
 				}
 				if(Crash(t.player_2_x, t.player_2_y, t.ie.pos.x, t.ie.pos.y, t.player_2_char_img, t.ie.item)) {
 					t.item_list.remove(v);
 					t.ige = new Item_Get_Effect(t.ie.pos.x-t.item_get.getWidth(null)/2+5, t.ie.pos.y-t.item_get.getHeight(null)/2+5);
 					t.item_get_list.add(t.ige);
+					if(t.player_2_char.equals("ironman") && t.player_2_pierce < 4 && t.ie.item_name.equals("pierce")) { 
+						if(t.player_2_pierce == 0) {
+							t.sub = new Ironman_sub(t.player_2_x-t.ironman_sub.getWidth(null), t.player_2_y);							
+						} else if(t.player_2_pierce == 1) {
+							t.sub = new Ironman_sub(t.player_2_x-t.ironman_sub.getWidth(null), t.player_2_y+t.player_1_char_img.getHeight(null)/4);
+						} else if(t.player_2_pierce == 2) {
+							t.sub = new Ironman_sub(t.player_2_x-t.ironman_sub.getWidth(null), t.player_2_y+t.player_1_char_img.getHeight(null)/2);
+						} else if(t.player_2_pierce == 3) {
+							t.sub = new Ironman_sub(t.player_2_x-t.ironman_sub.getWidth(null), t.player_2_y+t.player_1_char_img.getHeight(null)/4+t.player_1_char_img.getHeight(null)/2);
+						}
+						t.ironman_sub_list.add(t.sub);
+						t.player_2_pierce++;
+					}
+					if(t.player_2_char.equals("warmachine") && t.player_2_pierce < 4 && t.ie.item_name.equals("pierce")) {
+						t.player_2_pierce++;
+						t.b.special++;
+					}
+					if(t.ie.item_name.equals("attackspeed")) {
+						t.player_2_as--;
+					}
 				}
 			}
 		} catch(Exception e) {
@@ -1209,12 +1386,16 @@ class Sub_Thread extends Thread {
 		
 		boolean check = false;
 		
-		if((x1<x2+img2.getWidth(null)) &&
-			(x1+img1.getWidth(null)>x2) &&
-			(y1<y2+img2.getHeight(null)) &&
-			(y1+img1.getHeight(null)>y2)) {
-			check = true;
-			return check;
+		try {
+			if((x1<x2+img2.getWidth(null)) &&
+					(x1+img1.getWidth(null)>x2) &&
+					(y1<y2+img2.getHeight(null)) &&
+					(y1+img1.getHeight(null)>y2)) {
+				check = true;
+			}
+			return check;			
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 		return check;
 	}
@@ -1224,12 +1405,16 @@ class Sub_Thread extends Thread {
 		
 		boolean check = false;
 		
-		if((x1<x2+img2.getWidth(null)) &&
-			(x1+img1.getWidth(null)+minus_x>x2) &&
-			(y1<y2+img2.getHeight(null)) &&
-			(y1+img1.getHeight(null)+minus_y>y2)) {
-			check = true;
-			return check;
+		try {
+			if((x1<x2+img2.getWidth(null)) &&
+					(x1+img1.getWidth(null)+minus_x>x2) &&
+					(y1<y2+img2.getHeight(null)) &&
+					(y1+img1.getHeight(null)+minus_y>y2)) {
+				check = true;
+				return check;
+			}			
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 		return check;
 	}
