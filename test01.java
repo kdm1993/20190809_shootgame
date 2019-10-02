@@ -1,17 +1,16 @@
 package shootgame;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.font.TextLayout;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
 public class test01 {
@@ -75,6 +74,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static ArrayList<Kill> kill_list = new ArrayList<Kill>();
 	static ArrayList<Effect> effect_list = new ArrayList<Effect>();
 	static ArrayList<Ironman_sub> ironman_sub_list = new ArrayList<Ironman_sub>();
+	
 	Image explosion;
 	Bullet b;
 	Effect effect;
@@ -134,12 +134,15 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		Player_state();
 		g.drawImage(buffImage, 0, 0, this);
 	}
-
+	public static synchronized void Program_Timer(long start, long end) {
+		int time = 0;
+	}
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		try {
 			while (true) {
+				long start = System.currentTimeMillis();
 				if (player_1_char.equals("ironman") && player_1_pierce < 4) {
 					sub = new Ironman_sub(-100, -100);
 					effect = new Effect(-100, -100, 10);
@@ -154,9 +157,13 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 					player_2_pierce++;
 				}
 				KeyProcess();
-				TimerProcess();
+				//TimerProcess();
 				repaint();
-				Thread.sleep(16);
+				long end = System.currentTimeMillis();
+				if((end-start) > 1) {
+					System.out.println("쓰레드 1 실행 시간 : " + (end-start) + "ms");					
+				}
+				Thread.sleep(16-(end-start));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1171,7 +1178,7 @@ class Effect extends Effect_Class {
 				effect_num += 0.5;
 			}
 		} else if(effect_code == 13) {
-			effect_num += 0.1;
+			effect_num += 0.2;
 		} else {
 			effect_num++;
 		}
@@ -1265,6 +1272,7 @@ class Sub_Thread extends Thread {
 	@Override
 	public void run() {
 		while (true) {
+			long start = System.currentTimeMillis();
 			BulletProcess();
 			KillProcess();
 			Beam_Check();
@@ -1274,6 +1282,10 @@ class Sub_Thread extends Thread {
 			Bullet_Check();
 			Bullet2_Check();
 			Item_Check();
+			long end = System.currentTimeMillis();
+			if((end-start) > 1) {
+				System.out.println("쓰레드 2 실행 시간 : " + (end-start) + "ms");					
+			}
 			try {
 				Thread.sleep(16);
 			} catch (InterruptedException e) {
@@ -1665,7 +1677,7 @@ class Sub_Thread extends Thread {
 				if (v != t.effect_list.size()) {
 					t.effect = (Effect) t.effect_list.get(v);
 				}
-				if(t.effect.effect_code == 5 && t.effect != null) {
+				if(t.effect != null && t.effect.effect_code == 5) {
 					if (Crash(t.player_1_x, t.player_1_y, t.effect.pos.x, t.effect.pos.y, t.player_1_char_img, t.coin)) {
 						if(t.effect_list.size() != v) {
 							t.effect_list.remove(v);
@@ -1691,107 +1703,108 @@ class Sub_Thread extends Thread {
 				if (v != t.effect_list.size()) {
 					t.effect = (Effect) t.effect_list.get(v);
 				}
-				if(t.effect.effect_code == 11) {
-					
-					String item_name = "";
-					
-					if (t.effect.player_num == 0 || t.effect.player_num == 1 || t.effect.player_num == 6) {
-						item_name = "heart";
-					} else if (t.effect.player_num == 2 || t.effect.player_num == 3 || t.effect.player_num == 7) {
-						item_name = "energy";
-					} else if (t.effect.player_num == 4) {
-						item_name = "attackspeed";
-					} else if (t.effect.player_num == 5) {
-						item_name = "pierce";
-					}
-					t.effect.item_name = item_name;
-					if (Crash(t.player_1_x, t.player_1_y, t.effect.pos.x, t.effect.pos.y, t.player_1_char_img, t.effect.effect_img)) {
-						t.effect_list.remove(v);
-						t.effect = new Effect(t.effect.pos.x - t.item_get.getWidth(null) / 2 + 5,
-								t.effect.pos.y - t.item_get.getHeight(null) / 2 + 5, 9);
-						t.effect_list.add(t.effect);
-						if (t.player_1_char.equals("ironman") && t.player_1_pierce < 4 && t.effect.item_name.equals("pierce")) {
-							if (t.player_1_pierce == 0) {
-								t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null), t.player_1_y);
-							} else if (t.player_1_pierce == 1) {
-								t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null),
-										t.player_1_y + t.player_1_char_img.getHeight(null) / 4);
-							} else if (t.player_1_pierce == 2) {
-								t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null),
-										t.player_1_y + t.player_1_char_img.getHeight(null) / 2);
-							} else if (t.player_1_pierce == 3) {
-								t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null),
-										t.player_1_y + t.player_1_char_img.getHeight(null) / 4
-												+ t.player_1_char_img.getHeight(null) / 2);
+				if(t.effect != null) {
+					if(t.effect.effect_code == 11) {
+						String item_name = "";
+						
+						if (t.effect.player_num == 0 || t.effect.player_num == 1 || t.effect.player_num == 6) {
+							item_name = "heart";
+						} else if (t.effect.player_num == 2 || t.effect.player_num == 3 || t.effect.player_num == 7) {
+							item_name = "energy";
+						} else if (t.effect.player_num == 4) {
+							item_name = "attackspeed";
+						} else if (t.effect.player_num == 5) {
+							item_name = "pierce";
+						}
+						t.effect.item_name = item_name;
+						if (Crash(t.player_1_x, t.player_1_y, t.effect.pos.x, t.effect.pos.y, t.player_1_char_img, t.effect.effect_img)) {
+							t.effect_list.remove(v);
+							t.effect = new Effect(t.effect.pos.x - t.item_get.getWidth(null) / 2 + 5,
+									t.effect.pos.y - t.item_get.getHeight(null) / 2 + 5, 9);
+							t.effect_list.add(t.effect);
+							if (t.player_1_char.equals("ironman") && t.player_1_pierce < 4 && t.effect.item_name.equals("pierce")) {
+								if (t.player_1_pierce == 0) {
+									t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null), t.player_1_y);
+								} else if (t.player_1_pierce == 1) {
+									t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null),
+											t.player_1_y + t.player_1_char_img.getHeight(null) / 4);
+								} else if (t.player_1_pierce == 2) {
+									t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null),
+											t.player_1_y + t.player_1_char_img.getHeight(null) / 2);
+								} else if (t.player_1_pierce == 3) {
+									t.sub = new Ironman_sub(t.player_1_x - t.ironman_sub.getWidth(null),
+											t.player_1_y + t.player_1_char_img.getHeight(null) / 4
+													+ t.player_1_char_img.getHeight(null) / 2);
+								}
+								t.ironman_sub_list.add(t.sub);
+								t.player_1_pierce++;
 							}
-							t.ironman_sub_list.add(t.sub);
-							t.player_1_pierce++;
-						}
-						if (t.player_1_char.equals("warmachine") && t.player_1_pierce < 4
-								&& item_name.equals("pierce")) {
-							t.player_1_pierce++;
-							t.b.special++;
-						}
-						if (item_name.equals("attackspeed")) {
-							t.player_1_as--;
-						}
-						if(item_name.equals("heart")) {
-							if(t.player_1_hp <= 97) { 
-								t.player_1_hp += 10;
-							} else if(t.player_1_hp >= 98) {
-								t.player_1_hp = 107;
+							if (t.player_1_char.equals("warmachine") && t.player_1_pierce < 4
+									&& item_name.equals("pierce")) {
+								t.player_1_pierce++;
+								t.b.special++;
 							}
-						}
-						if(item_name.equals("energy")) {
-							if(t.player_1_mana <= 99) { 
-								t.player_1_mana += 10;
-							} else if(t.player_1_mana >= 100) {
-								t.player_1_mana = 109;
+							if (item_name.equals("attackspeed")) {
+								t.player_1_as--;
 							}
-						}
-					} else if (Crash(t.player_2_x, t.player_2_y, t.effect.pos.x, t.effect.pos.y, t.player_2_char_img, t.effect.effect_img)) {
-						t.effect_list.remove(v);
-						t.effect = new Effect(t.effect.pos.x - t.item_get.getWidth(null) / 2 + 5,
-								t.effect.pos.y - t.item_get.getHeight(null) / 2 + 5, 9);
-						t.effect_list.add(t.effect);
-						if (t.player_2_char.equals("ironman") && t.player_2_pierce < 4 && item_name.equals("pierce")) {
-							if (t.player_2_pierce == 0) {
-								t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null), t.player_2_y);
-								t.effect = new Effect(t.player_2_x - t.ironman_sub.getWidth(null), t.player_2_y, 10);
-							} else if (t.player_2_pierce == 1) {
-								t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null),
-										t.player_2_y + t.player_1_char_img.getHeight(null) / 4);
-							} else if (t.player_2_pierce == 2) {
-								t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null),
-										t.player_2_y + t.player_1_char_img.getHeight(null) / 2);
-							} else if (t.player_2_pierce == 3) {
-								t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null),
-										t.player_2_y + t.player_1_char_img.getHeight(null) / 4
-												+ t.player_1_char_img.getHeight(null) / 2);
+							if(item_name.equals("heart")) {
+								if(t.player_1_hp <= 97) { 
+									t.player_1_hp += 10;
+								} else if(t.player_1_hp >= 98) {
+									t.player_1_hp = 107;
+								}
 							}
-							t.ironman_sub_list.add(t.sub);
-							t.player_2_pierce++;
-						}
-						if (t.player_2_char.equals("warmachine") && t.player_2_pierce < 4
-								&& t.effect.item_name.equals("pierce")) {
-							t.player_2_pierce++;
-							t.b.special++;
-						}
-						if (item_name.equals("attackspeed")) {
-							t.player_2_as--;
-						}
-						if(item_name.equals("heart")) {
-							if(t.player_2_hp <= 97) { 
-								t.player_2_hp += 10;
-							} else if(t.player_2_hp >= 98) {
-								t.player_2_hp = 107;
+							if(item_name.equals("energy")) {
+								if(t.player_1_mana <= 99) { 
+									t.player_1_mana += 10;
+								} else if(t.player_1_mana >= 100) {
+									t.player_1_mana = 109;
+								}
 							}
-						}
-						if(item_name.equals("energy")) {
-							if(t.player_2_mana <= 99) { 
-								t.player_2_mana += 10;
-							} else if(t.player_2_mana >= 100) {
-								t.player_2_mana = 109;
+						} else if (Crash(t.player_2_x, t.player_2_y, t.effect.pos.x, t.effect.pos.y, t.player_2_char_img, t.effect.effect_img)) {
+							t.effect_list.remove(v);
+							t.effect = new Effect(t.effect.pos.x - t.item_get.getWidth(null) / 2 + 5,
+									t.effect.pos.y - t.item_get.getHeight(null) / 2 + 5, 9);
+							t.effect_list.add(t.effect);
+							if (t.player_2_char.equals("ironman") && t.player_2_pierce < 4 && item_name.equals("pierce")) {
+								if (t.player_2_pierce == 0) {
+									t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null), t.player_2_y);
+									t.effect = new Effect(t.player_2_x - t.ironman_sub.getWidth(null), t.player_2_y, 10);
+								} else if (t.player_2_pierce == 1) {
+									t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null),
+											t.player_2_y + t.player_1_char_img.getHeight(null) / 4);
+								} else if (t.player_2_pierce == 2) {
+									t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null),
+											t.player_2_y + t.player_1_char_img.getHeight(null) / 2);
+								} else if (t.player_2_pierce == 3) {
+									t.sub = new Ironman_sub(t.player_2_x - t.ironman_sub.getWidth(null),
+											t.player_2_y + t.player_1_char_img.getHeight(null) / 4
+													+ t.player_1_char_img.getHeight(null) / 2);
+								}
+								t.ironman_sub_list.add(t.sub);
+								t.player_2_pierce++;
+							}
+							if (t.player_2_char.equals("warmachine") && t.player_2_pierce < 4
+									&& t.effect.item_name.equals("pierce")) {
+								t.player_2_pierce++;
+								t.b.special++;
+							}
+							if (item_name.equals("attackspeed")) {
+								t.player_2_as--;
+							}
+							if(item_name.equals("heart")) {
+								if(t.player_2_hp <= 97) { 
+									t.player_2_hp += 10;
+								} else if(t.player_2_hp >= 98) {
+									t.player_2_hp = 107;
+								}
+							}
+							if(item_name.equals("energy")) {
+								if(t.player_2_mana <= 99) { 
+									t.player_2_mana += 10;
+								} else if(t.player_2_mana >= 100) {
+									t.player_2_mana = 109;
+								}
 							}
 						}
 					}
