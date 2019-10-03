@@ -14,13 +14,13 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 
 public class test01 {
-
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		new test02().start();
-		new Sub_Thread().sub_start();
+		test02 t = new test02();
+		t.game_start();
+		t.th.start();
+		new Sub_Thread().start();
 	}
-
 }
 
 class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
@@ -28,6 +28,8 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static boolean dual = true;
 	static int player_1_state = 0;
 	static int player_2_state = 0;
+	static boolean Thread_1_wait = false;
+	static boolean Thread_2_wait = false;
 	double player_1_spark_count = 0;
 	double player_2_spark_count = 0;
 	//0 : 생존		1 : 죽음	 2 : 움직일수없음
@@ -59,7 +61,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image hp_bar = tk.getImage("D://images//hp//RedBar.png");
 	Image coin = tk.getImage("D://images//coin.gif");
 	static Image ironman_sub = tk.getImage("D://images//ironman_sub.png");
-	static Image booster = tk.getImage("D://images//booster.gif");
+	Image booster = tk.getImage("D://images//booster//booster0.png");
 	Image char_ui;
 	Image beam;
 	Image item_get = tk.getImage("D://images//item_get//item_get0.png");
@@ -68,13 +70,12 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	Image bullet_explo;
 	Image buffImage = null;
 	Graphics buffg = null;
-	Thread th;
+	Thread th = new Thread(this);
 	static ArrayList<Bullet> p_1_bullet_list = new ArrayList<Bullet>();
 	static ArrayList<Bullet> p_2_bullet_list = new ArrayList<Bullet>();
 	static ArrayList<Kill> kill_list = new ArrayList<Kill>();
 	static ArrayList<Effect> effect_list = new ArrayList<Effect>();
 	static ArrayList<Ironman_sub> ironman_sub_list = new ArrayList<Ironman_sub>();
-	
 	Image explosion;
 	Bullet b;
 	Effect effect;
@@ -94,7 +95,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static int timer = 0, timer_count = 0;
 	boolean test_count;
 
-	public void start() {
+	public void game_start() {
 		hp_bar = tk.getImage("D://images//hp//RedBar.png");
 		player_1_char_img = tk.getImage("D://images//" + player_1_char + "_up.png");
 		player_2_char_img = tk.getImage("D://images//" + player_2_char + "_up.png");
@@ -108,8 +109,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		setFocusable(true);
 		setVisible(true);
 		setResizable(false);
-		th = new Thread(this);
-		th.start();
+		//th.start();
 	}
 
 	public void paint(Graphics g) {
@@ -134,9 +134,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		Player_state();
 		g.drawImage(buffImage, 0, 0, this);
 	}
-	public static synchronized void Program_Timer(long start, long end) {
-		int time = 0;
-	}
+
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
@@ -145,13 +143,13 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				long start = System.currentTimeMillis();
 				if (player_1_char.equals("ironman") && player_1_pierce < 4) {
 					sub = new Ironman_sub(-100, -100);
-					effect = new Effect(-100, -100, 10);
+					effect = new Effect(-100-booster.getWidth(null), -100, 10);
 					ironman_sub_list.add(sub);
 					effect_list.add(effect);
 					player_1_pierce++;
 				} else if(player_2_char.equals("ironman") && player_2_pierce < 4) {
 					sub = new Ironman_sub(-100, -100);
-					effect = new Effect(-100, -100, 10);
+					effect = new Effect(-100-booster.getWidth(null), -100, 10);
 					ironman_sub_list.add(sub);
 					effect_list.add(effect);
 					player_2_pierce++;
@@ -163,13 +161,14 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				if((end-start) > 1) {
 					System.out.println("쓰레드 1 실행 시간 : " + (end-start) + "ms");					
 				}
-				Thread.sleep(16-(end-start));
+				if((end-start) < 16) {					
+					Thread.sleep(16-(end-start));
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
 	public void TimerProcess() {
 		timer_count += 16;
 		if (timer_count >= 1000) {
@@ -389,6 +388,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				} else if(effect.effect_code == 12) {
 					effect.effect_img = tk.getImage("D://images//spark//spark_"+ (int)effect.effect_num +".png");
 				} else if(effect.effect_code == 13) {
+					System.out.println((int)effect.effect_num);
 					effect.effect_img = tk.getImage("D://images//char_explo//char_explo_"+ (int)effect.effect_num +".png");
 				}
 				buffg.drawImage(effect.effect_img, effect.pos.x, effect.pos.y, this);
@@ -447,10 +447,8 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 						if(player_1_spark_count > 10) {
 							player_1_spark_count = 0;
 							effect_list.remove(v);
-							effect = new Effect(player_1_die_x-100, player_1_die_y-200, 13, 1);
+							effect = new Effect(player_1_die_x, player_1_die_y, 13, 1);
 							effect_list.add(effect);
-							player_1_die_x = 0;
-							player_1_die_y = 0;
 						}
 					} else if(effect.player_num == 2) {
 						player_2_spark_count++;
@@ -524,11 +522,9 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			for (int k = 0; k < ironman_sub_list.size(); k++) {
 				sub = ironman_sub_list.get(k);
 				effect = effect_list.get(k);
-				booster = tk.getImage("D://images//booster//booster"+(int)effect.effect_num+".png");
 				buffg.drawImage(ironman_sub, sub.pos.x, sub.pos.y, this);
-				buffg.drawImage(booster, effect.pos.x - booster.getWidth(null), effect.pos.y, this);
 				sub.move(k);
-				effect.pos.x = sub.pos.x;
+				effect.pos.x = sub.pos.x-booster.getWidth(null);
 				effect.pos.y = sub.pos.y + 3;
 				effect.next_img();
 			}
@@ -536,11 +532,9 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			for (int k = 0; k < ironman_sub_list.size(); k++) {
 				sub = ironman_sub_list.get(k);
 				effect = effect_list.get(k);
-				booster = tk.getImage("D://images//booster//booster"+(int)effect.effect_num+".png");
 				buffg.drawImage(ironman_sub, sub.pos.x, sub.pos.y, this);
-				buffg.drawImage(booster, effect.pos.x - booster.getWidth(null), effect.pos.y, this);
 				sub.move(k);
-				effect.pos.x = sub.pos.x;
+				effect.pos.x = sub.pos.x-booster.getWidth(null);
 				effect.pos.y = sub.pos.y + 3;
 				effect.next_img();
 			}
@@ -1096,6 +1090,8 @@ class Effect extends Effect_Class {
 			effect_img = t.tk.getImage("D://images//coin.gif");
 		} else if(effect_code == 6) {
 			effect_img = t.tk.getImage("D://images//hit//hit" + (int) effect_num + ".png");
+		} else if(effect_code == 10) {
+			effect_img = t.tk.getImage("D://images//booster//booster0.png");
 		} else if(effect_code == 11) {
 			player_num = (int) (Math.random() * 8);
 			effect_img = t.tk.getImage("D://images//item//"+ item_name +".gif");
@@ -1146,6 +1142,8 @@ class Effect extends Effect_Class {
 				pos.x = t.player_2_x + t.player_2_char_img.getWidth(null)-3;
 				pos.y = t.player_2_y-5;
 			}
+		} else if(effect_code == 10) {
+			
 		} else if(effect_code == 11) {
 			pos.x -= 2;
 			if (shoot == true) {
@@ -1264,12 +1262,12 @@ class Ironman_sub extends Effect_Class {
 class Sub_Thread extends Thread {
 
 	test02 t = new test02();
-
+	/*
 	public void sub_start() {
 		start();
 	}
+	*/
 
-	@Override
 	public void run() {
 		while (true) {
 			long start = System.currentTimeMillis();
@@ -1287,14 +1285,15 @@ class Sub_Thread extends Thread {
 				System.out.println("쓰레드 2 실행 시간 : " + (end-start) + "ms");					
 			}
 			try {
-				Thread.sleep(16);
+				if((end-start) < 16) {
+					Thread.sleep(16-(end-start));					
+				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
-
 	public void BulletProcess() {
 		t.bullet_count_1++;
 		t.bullet_count_2++;
@@ -1485,10 +1484,10 @@ class Sub_Thread extends Thread {
 		if (t.p_1_bullet_list.size() != 0) {
 			for (int i = 0; i < t.p_1_bullet_list.size(); i++) {
 				for (int v = 0; v < t.kill_list.size(); v++) {
-					if (i != t.p_1_bullet_list.size()) {
+					if (i < t.p_1_bullet_list.size()) {
 						t.b = (Bullet) t.p_1_bullet_list.get(i);
 					}
-					if (v != t.kill_list.size()) {
+					if (v < t.kill_list.size()) {
 						t.k = (Kill) t.kill_list.get(v);
 					}
 					if(t.k != null && t.b != null) {
