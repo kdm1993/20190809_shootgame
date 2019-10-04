@@ -28,8 +28,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static boolean dual = true;
 	static int player_1_state = 0;
 	static int player_2_state = 0;
-	static boolean Thread_1_wait = false;
-	static boolean Thread_2_wait = false;
 	double player_1_spark_count = 0;
 	double player_2_spark_count = 0;
 	//0 : 생존		1 : 죽음	 2 : 움직일수없음
@@ -119,7 +117,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	}
 
 	public void update(Graphics g) {
-		Draw();
+		Draw_Map();
 		Draw_P1_Bullet();
 		Draw_P2_Bullet();
 		Draw_Kill();
@@ -127,6 +125,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		Draw_Beam();
 		LaserProcess();
 		Draw_Ironman_sub();
+		Draw();
 		Draw_Effect();
 		Draw_Score();
 		Draw_Game_UI();
@@ -141,18 +140,27 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		try {
 			while (true) {
 				long start = System.currentTimeMillis();
-				if (player_1_char.equals("ironman") && player_1_pierce < 4) {
-					sub = new Ironman_sub(-100, -100);
-					effect = new Effect(-100-booster.getWidth(null), -100, 10);
-					ironman_sub_list.add(sub);
-					effect_list.add(effect);
-					player_1_pierce++;
-				} else if(player_2_char.equals("ironman") && player_2_pierce < 4) {
-					sub = new Ironman_sub(-100, -100);
-					effect = new Effect(-100-booster.getWidth(null), -100, 10);
-					ironman_sub_list.add(sub);
-					effect_list.add(effect);
-					player_2_pierce++;
+				for(int x=0; x<4; x++) {
+					if (player_1_char.equals("ironman") && player_1_pierce < 4) {
+						sub = new Ironman_sub(-100, -100);
+						effect = new Effect(-100-booster.getWidth(null), -100, 10);
+						ironman_sub_list.add(sub);
+						effect_list.add(effect);
+						player_1_pierce++;
+					} else if(player_2_char.equals("ironman") && player_2_pierce < 4) {
+						sub = new Ironman_sub(-100, -100);
+						effect = new Effect(-100-booster.getWidth(null), -100, 10);
+						ironman_sub_list.add(sub);
+						effect_list.add(effect);
+						player_2_pierce++;
+					}
+				}
+				if(test_count == false) {
+					test_count = true;
+					for(int x=1; x<14; x++) {
+						effect = new Effect(-5000, -5000, x, true);
+						effect_list.add(effect);
+					}
 				}
 				KeyProcess();
 				//TimerProcess();
@@ -204,13 +212,14 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			player_2_x += 10;
 		}
 	}
-
-	public void Draw() {
+	public void Draw_Map() {
 		buffg.clearRect(0, 30, f_width, f_height);
-		Image warmachine_gun;
-		warmachine_gun = tk.getImage("D://images//warmachine_gun.png");
 		buffg.drawImage(map, map_x_1, 0, this);
 		buffg.drawImage(map2, map_x_2, 0, this);
+	}
+	public void Draw() {
+		Image warmachine_gun;
+		warmachine_gun = tk.getImage("D://images//warmachine_gun.png");
 		if (player_1_char.equals("warmachine") && player_1_state == 0) {
 			buffg.drawImage(warmachine_gun, player_1_x + 20, player_1_y, this);
 		} else if (player_2_char.equals("warmachine") && dual == true && player_1_state == 0) {
@@ -388,7 +397,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 				} else if(effect.effect_code == 12) {
 					effect.effect_img = tk.getImage("D://images//spark//spark_"+ (int)effect.effect_num +".png");
 				} else if(effect.effect_code == 13) {
-					System.out.println((int)effect.effect_num);
 					effect.effect_img = tk.getImage("D://images//char_explo//char_explo_"+ (int)effect.effect_num +".png");
 				}
 				buffg.drawImage(effect.effect_img, effect.pos.x, effect.pos.y, this);
@@ -447,15 +455,28 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 						if(player_1_spark_count > 10) {
 							player_1_spark_count = 0;
 							effect_list.remove(v);
-							effect = new Effect(player_1_die_x, player_1_die_y, 13, 1);
+							effect = new Effect(player_1_die_x-480, player_1_die_y-200, 13, 1);
 							effect_list.add(effect);
+							player_1_die_x = 0;
+							player_1_die_y = 0;
 						}
 					} else if(effect.player_num == 2) {
 						player_2_spark_count++;
+						if(player_2_spark_count > 10) {
+							player_2_spark_count = 0;
+							effect_list.remove(v);
+							effect = new Effect(player_2_die_x-480, player_2_die_y-200, 13, 2);
+							effect_list.add(effect);
+							player_2_die_x = 0;
+							player_2_die_y = 0;
+						}
 					}
 				} else if(effect.effect_code == 13) {
 					if(effect.effect_num >= 12.0 && effect.player_num == 1 && player_1_state == 2) {
 						player_1_state = 1;
+					}
+					if(effect.effect_num >= 12.0 && effect.player_num == 1 && player_2_state == 2) {
+						player_2_state = 1;
 					}
 					if(effect.effect_num >= 34.0) {
 						effect_list.remove(v);
@@ -521,7 +542,6 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		if (player_1_char.equals("ironman") && player_1_state != 1) {
 			for (int k = 0; k < ironman_sub_list.size(); k++) {
 				sub = ironman_sub_list.get(k);
-				effect = effect_list.get(k);
 				buffg.drawImage(ironman_sub, sub.pos.x, sub.pos.y, this);
 				sub.move(k);
 				effect.pos.x = sub.pos.x-booster.getWidth(null);
@@ -558,11 +578,11 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 			buffg.drawImage(char_ui, 134 + x, 110, player_2_mana, 9, this);
 		}
 	}
+
 	public void Draw_Diying() {
 		if(player_1_die_x != 0 && player_1_state == 2) {
 			player_1_char_img = tk.getImage("D://images//" + player_1_char + "_left.png");
-			buffg.drawImage(player_1_char_img, player_1_die_x, player_1_die_y, this);
-			
+			buffg.drawImage(player_1_char_img, player_1_die_x, player_1_die_y, this);	
 		}
 		if(player_2_die_x != 0 && player_2_state == 2) {
 			player_2_char_img = tk.getImage("D://images//" + player_2_char + "_left.png");
@@ -716,24 +736,28 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	@Override
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
-		if(player_1_state == 1) {
 			switch(e.getKeyCode()) {
 			case KeyEvent.VK_1:
-				player_1_state = 2;
-				player_1_x = 100;
-				player_1_y = 200;
-				player_1_hp = 107;
-				player_1_mana = 109;
+				if(player_1_state == 1) {
+					player_1_state = 2;
+					player_1_x = -100;
+					player_1_y = 200;
+					player_1_hp = 107;
+					player_1_mana = 109;
+					player_1_char_img = tk.getImage("D://images//" + player_1_char + "_up.png");
+				}
 				break;
 			case KeyEvent.VK_2:
-				player_2_state = 2;
-				player_2_x = 100;
-				player_2_y = 400;
-				player_2_hp = 107;
-				player_2_mana = 109;
+				if(player_2_state == 1) {
+					player_2_state = 2;
+					player_2_x = -100;
+					player_2_y = 400;
+					player_2_hp = 107;
+					player_2_mana = 109;
+					player_2_char_img = tk.getImage("D://images//" + player_2_char + "_up.png");					
+				}
 				break;
 			}
-		}
 		if(player_1_state == 0) {
 			switch (e.getKeyCode()) {
 			case KeyEvent.VK_W:
@@ -885,6 +909,18 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 
 	}
 	public void Player_state() {
+		if(player_1_state == 2 && player_1_hp == 107 && player_1_x < 100) {
+			player_1_x += 1;
+			if(player_1_x == 100) {
+				player_1_state = 0;
+			}
+		}
+		if(player_2_state == 2 && player_2_hp == 107 && player_2_x < 100) {
+			player_2_x += 1;
+			if(player_2_x == 100) {
+				player_2_state = 0;
+			}
+		}
 		if(player_1_hp <= 0 && player_1_state == 0) {
 			player_1_state = 2;
 			player_1_die_x = player_1_x;
@@ -1035,6 +1071,7 @@ class Effect extends Effect_Class {
 	int effect_code = 0;
 	double effect_num = 0;
 	boolean shoot = true;
+	boolean test = false;
 	double shoot_x = 0, shoot_y = 0;
 	double move_x = 0, move_y = 0;
 	int damage = 1;
@@ -1102,83 +1139,94 @@ class Effect extends Effect_Class {
 		this.effect_code = effect_code;
 		this.player_num = player_num;
 	}
+	Effect(int x, int y, int effect_code, boolean test) {
+		pos = new Point(x, y);
+		this.effect_code = effect_code;
+		this.test = test;
+	}
 	public void move() {
-		if(effect_code == 1) {
-			shoot_x -= 4;
-			shoot_y += -move_y;
-			pos.setLocation(shoot_x, shoot_y);
-			pos.x = (int) shoot_x;
-			pos.y = (int) shoot_y;
-		} else if(effect_code == 5) {
-			if (coin_y < 30) {
-				pos.y -= 2;
-				pos.x -= 6;
-			} else {
-				pos.y += 1;
+		if(test == false) {
+			if(effect_code == 1) {
+				shoot_x -= 4;
+				shoot_y += -move_y;
+				pos.setLocation(shoot_x, shoot_y);
+				pos.x = (int) shoot_x;
+				pos.y = (int) shoot_y;
+			} else if(effect_code == 5) {
+				if (coin_y < 30) {
+					pos.y -= 2;
+					pos.x -= 6;
+				} else {
+					pos.y += 1;
+					pos.x -= 2;
+				}
+				coin_y++;
+			} else if(effect_code == 7) {
+				if(t.player_1_char.equals("ironman")) {
+					pos.x = t.player_1_x-85;
+					pos.y = t.player_1_y-100;			
+				} else if(t.player_2_char.equals("ironman")) {
+					pos.x = t.player_2_x-85;
+					pos.y = t.player_2_y-100;		
+				}
+			} else if(effect_code == 8 && player_num == 1) {
+				if (t.player_1_char.equals("warmachine")) {
+					pos.x = t.player_1_x + t.player_1_char_img.getWidth(null)-3;
+					pos.y = t.player_1_y + 4;
+				} else {
+					pos.x = t.player_2_x + t.player_2_char_img.getWidth(null)-3;
+					pos.y = t.player_2_y + 4;
+				}
+			} else if(effect_code == 8 && player_num == 2) {
+				if (t.player_1_char.equals("warmachine")) {
+					pos.x = t.player_1_x + t.player_1_char_img.getWidth(null)-3;
+					pos.y = t.player_1_y-5;
+				} else {
+					pos.x = t.player_2_x + t.player_2_char_img.getWidth(null)-3;
+					pos.y = t.player_2_y-5;
+				}
+			} else if(effect_code == 10) {
+				
+			} else if(effect_code == 11) {
 				pos.x -= 2;
-			}
-			coin_y++;
-		} else if(effect_code == 7) {
-			if(t.player_1_char.equals("ironman")) {
-				pos.x = t.player_1_x-85;
-				pos.y = t.player_1_y-100;			
-			} else if(t.player_2_char.equals("ironman")) {
-				pos.x = t.player_2_x-85;
-				pos.y = t.player_2_y-100;		
-			}
-		} else if(effect_code == 8 && player_num == 1) {
-			if (t.player_1_char.equals("warmachine")) {
-				pos.x = t.player_1_x + t.player_1_char_img.getWidth(null)-3;
-				pos.y = t.player_1_y + 4;
+				if (shoot == true) {
+					pos.y--;
+					move_y -= 0.2;
+				} else if (shoot == false) {
+					pos.y++;
+					move_y += 0.2;
+				}
+				if (move_y <= 0.0) {
+					shoot = false;
+				} else if (move_y >= 10.0) {
+					shoot = true;
+				}
+			} else if(effect_code == 12 || effect_code == 13) {
+				
 			} else {
-				pos.x = t.player_2_x + t.player_2_char_img.getWidth(null)-3;
-				pos.y = t.player_2_y + 4;
+				pos.x --;
 			}
-		} else if(effect_code == 8 && player_num == 2) {
-			if (t.player_1_char.equals("warmachine")) {
-				pos.x = t.player_1_x + t.player_1_char_img.getWidth(null)-3;
-				pos.y = t.player_1_y-5;
-			} else {
-				pos.x = t.player_2_x + t.player_2_char_img.getWidth(null)-3;
-				pos.y = t.player_2_y-5;
-			}
-		} else if(effect_code == 10) {
-			
-		} else if(effect_code == 11) {
-			pos.x -= 2;
-			if (shoot == true) {
-				pos.y--;
-				move_y -= 0.2;
-			} else if (shoot == false) {
-				pos.y++;
-				move_y += 0.2;
-			}
-			if (move_y <= 0.0) {
-				shoot = false;
-			} else if (move_y >= 10.0) {
-				shoot = true;
-			}
-		} else if(effect_code == 12 || effect_code == 13) {
-			
-		} else {
-			pos.x --;
 		}
 	}
 	public void next_img() {
-		if(effect_code == 2 || effect_code == 9 || effect_code == 12) {
-			effect_num += 0.5;
-		} else if(effect_code == 6) {
-			effect_num += 0.1;
-		} else if(effect_code == 7) {
-			if(t.right_button_count < 50) {
-				effect_num += 0.2;				
-			} else {
+		if(test == false) {
+			if(effect_code == 2 || effect_code == 9 || effect_code == 12) {
 				effect_num += 0.5;
-			}
-		} else if(effect_code == 13) {
-			effect_num += 0.2;
-		} else {
-			effect_num++;
+			} else if(effect_code == 6) {
+				effect_num += 0.1;
+			} else if(effect_code == 7) {
+				if(t.right_button_count < 50) {
+					effect_num += 0.2;				
+				} else {
+					effect_num += 0.5;
+				}
+			} else if(effect_code == 13) {
+				effect_num += 0.2;
+			} else {
+				effect_num++;
+			}			
+		} else if(test == true) {
+			effect_num += 1;
 		}
 	}
 }
@@ -1453,7 +1501,7 @@ class Sub_Thread extends Thread {
 					t.effect = (Effect) t.effect_list.get(i);
 				}
 				if(t.effect != null) {
-					if(t.effect.effect_code == 1) {
+					if(t.effect.effect_code == 1 && t.effect.test == false) {
 						if (Crash(t.player_1_x + 30, t.player_1_y + 17, t.effect.pos.x, t.effect.pos.y, t.player_1_char_img,
 								t.effect.effect_img, -60, -90) && t.player_1_state == 0) {
 							if (t.effect_list.size() > 0) {
@@ -1703,7 +1751,7 @@ class Sub_Thread extends Thread {
 					t.effect = (Effect) t.effect_list.get(v);
 				}
 				if(t.effect != null) {
-					if(t.effect.effect_code == 11) {
+					if(t.effect.effect_code == 11 && t.effect.test == false) {
 						String item_name = "";
 						
 						if (t.effect.player_num == 0 || t.effect.player_num == 1 || t.effect.player_num == 6) {
