@@ -1,7 +1,10 @@
 package shootgame;
 
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.Graphics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -45,7 +48,7 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 	static int player_1_score = 0, player_2_score = 0;
 	static String player_1_char = "warmachine", player_2_char = "ironman";
 	int map_x_1 = 0, map_x_2 = 1280;
-	int f_width = 1280, f_height = 710;
+	int f_width = 1280, f_height = 720;
 	static Toolkit tk = Toolkit.getDefaultToolkit();
 	static Image player_1_char_img = tk.getImage("D://images//ironman_up.png");
 	static Image player_2_char_img = tk.getImage("D://images//ironman_up.png");
@@ -107,9 +110,23 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		setFocusable(true);
 		setVisible(true);
 		setResizable(false);
+		FullScreen();		
 		//th.start();
 	}
-
+	public void FullScreen() {
+		DisplayMode dm = new DisplayMode(1280, 720, 32, DisplayMode.REFRESH_RATE_UNKNOWN);
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice gd = ge.getDefaultScreenDevice();
+		gd.setFullScreenWindow(this);
+		
+		if(dm != null && gd.isDisplayChangeSupported()) {
+			try {
+				gd.setDisplayMode(dm);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	public void paint(Graphics g) {
 		buffImage = createImage(f_width, f_height);
 		buffg = buffImage.getGraphics();
