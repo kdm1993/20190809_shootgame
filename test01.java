@@ -101,16 +101,18 @@ class test02 extends JFrame implements KeyListener, Runnable, MouseListener {
 		player_1_char_img = tk.getImage("D://images//" + player_1_char + "_up.png");
 		player_2_char_img = tk.getImage("D://images//" + player_2_char + "_up.png");
 		Dimension dim = new Dimension(1280, 720);
+		setUndecorated(true);
 		setPreferredSize(dim);
 		pack();
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		addKeyListener(this);
 		addMouseListener(this);
 		setTitle("Ω¥∆√∞‘¿”");
+		FullScreen();	
 		setFocusable(true);
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setVisible(true);
 		setResizable(false);
-		FullScreen();		
 		//th.start();
 	}
 	public void FullScreen() {
